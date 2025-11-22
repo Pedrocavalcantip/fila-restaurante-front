@@ -1,5 +1,6 @@
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import EscolhaPerfil from './paginas/EscolhaPerfil';
 import LoginCliente from './paginas/LoginCliente';
 import CadastroCliente from './paginas/CadastroCliente';
 import RestaurantesDisponiveis from './paginas/RestaurantesDisponiveis';
@@ -8,11 +9,17 @@ import LoginRestaurante from './paginas/LoginRestaurante';
 import CadastroRestaurante from './paginas/CadastroRestaurante';
 import PerfilCliente from './paginas/PerfilCliente';
 import EntrarNaFila from './paginas/EntrarNaFila';
+import PainelAdministrativo from './paginas/PainelAdministrativo';
+import PainelOperador from './paginas/PainelOperador';
+import Gerenciamento from './paginas/Gerenciamento';
+import GerenciamentoFilas from './paginas/GerenciamentoFilas';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Tela inicial de escolha de perfil */}
+        <Route path="/" element={<EscolhaPerfil />} />
         {/* Tela de login do cliente */}
         <Route path="/cliente/login" element={<LoginCliente />} />
         {/* Tela de cadastro do cliente */}
@@ -29,8 +36,14 @@ function App() {
         <Route path="/restaurante/login" element={<LoginRestaurante />} />
         {/* Tela de cadastro do restaurante */}
         <Route path="/restaurante/cadastro" element={<CadastroRestaurante />} />
-        {/* Redirecionar a home para a tela de login por enquanto */}
-        <Route path="/" element={<Navigate to="/cliente/login" replace />} />
+        {/* Painel administrativo do restaurante */}
+        <Route path="/restaurante/painel" element={<PainelAdministrativo />} />
+        {/* Gerenciamento de equipe e filas */}
+        <Route path="/restaurante/gerenciamento" element={<Gerenciamento />} />
+        {/* Gerenciamento de filas */}
+        <Route path="/restaurante/gerenciamento/filas" element={<GerenciamentoFilas />} />
+        {/* Painel do operador - Fila ao Vivo */}
+        <Route path="/restaurante/painel-operador" element={<PainelOperador />} />
       </Routes>
     </BrowserRouter>
   );

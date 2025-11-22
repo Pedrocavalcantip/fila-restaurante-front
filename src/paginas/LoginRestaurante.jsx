@@ -33,8 +33,8 @@ export default function LoginRestaurante() {
       localStorage.setItem('token', mockToken);
       localStorage.setItem('operador', JSON.stringify(mockOperador));
 
-      // Redirecionar para o painel do restaurante
-      navigate('/restaurante/dashboard');
+      // Redirecionar para o painel administrativo
+      navigate('/restaurante/painel');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       setErro('Erro ao fazer login. Tente novamente.');
