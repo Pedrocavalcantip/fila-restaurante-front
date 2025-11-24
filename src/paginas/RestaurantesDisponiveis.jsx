@@ -32,25 +32,17 @@ export default function RestaurantesDisponiveis() {
         setRestaurantes(restaurantesMockados);
       }
 
-      // Verificar se tem ticket ativo
-      try {
-        const responseTicket = await clienteService.buscarMeuTicket();
-        if (responseTicket) {
-          setTicketAtivo(responseTicket);
+      // Verificar se tem ticket ativo no localStorage
+      const ticketLocal = localStorage.getItem('ticketAtivo');
+      if (ticketLocal) {
+        try {
+          const ticketData = JSON.parse(ticketLocal);
+          setTicketAtivo(ticketData);
+          console.log('✅ Ticket ativo encontrado:', ticketData);
+        } catch (error) {
+          console.error('Erro ao ler ticket do localStorage:', error);
+          localStorage.removeItem('ticketAtivo');
         }
-      } catch (error) {
-        // Simular que o cliente está em uma fila
-        setTicketAtivo({
-          id: 'mock-ticket-123',
-          numero: 42,
-          status: 'AGUARDANDO',
-          posicaoAtual: 5,
-          tempoEstimadoMinutos: 25,
-          restaurante: {
-            nome: 'Trattoria Bella Vista',
-            slug: 'trattoria-bella-vista'
-          }
-        });
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -97,8 +89,10 @@ export default function RestaurantesDisponiveis() {
     setLoadingConfirmar(true);
 
     try {
-      // TODO: Integrar com API POST /cliente/restaurantes/{slug}/fila/entrar
-      // Body: { quantidadePessoas, prioridade, observacoes }
+      // Buscar dados do cliente logado
+      const clienteLogado = JSON.parse(localStorage.getItem('clienteLogado') || '{}');
+      
+      // Criar ticket com todos os dados necessários
       const ticketMock = {
         id: 'ticket-' + Date.now(),
         numero: Math.floor(Math.random() * 9000) + 1000,
@@ -108,10 +102,20 @@ export default function RestaurantesDisponiveis() {
         quantidadePessoas: quantidadePessoas,
         tempoEstimadoMinutos: prioridadeSelecionada === 'FAST_LANE' ? 10 : 25,
         observacoes: observacoes,
-        restaurante: restauranteSelecionado
+        nomeCliente: clienteLogado.nome || 'Cliente',
+        telefone: clienteLogado.telefone || '',
+        createdAt: new Date().toISOString(),
+        restaurante: {
+          id: restauranteSelecionado.id,
+          nome: restauranteSelecionado.nome,
+          slug: restauranteSelecionado.slug,
+          endereco: restauranteSelecionado.endereco,
+          telefone: restauranteSelecionado.telefone
+        }
       };
 
       localStorage.setItem('ticketAtivo', JSON.stringify(ticketMock));
+      console.log('✅ Ticket criado:', ticketMock);
       navigate('/cliente/meu-ticket');
     } catch (error) {
       console.error('Erro ao entrar na fila:', error);
@@ -252,8 +256,14 @@ export default function RestaurantesDisponiveis() {
 
       {/* Modal de Entrar na Fila */}
       {modalAberto && restauranteSelecionado && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+          onClick={handleFecharModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header do Modal */}
             <div className="flex items-center justify-between p-6 pb-4">
               <div>
@@ -352,7 +362,7 @@ export default function RestaurantesDisponiveis() {
   );
 }
 
-// Dados mockados de restaurantes
+// Dados mockados de restaurantes (simulando resposta do backend)
 const restaurantesMockados = [
   {
     id: '1',
@@ -362,13 +372,14 @@ const restaurantesMockados = [
     estado: 'SP',
     telefone: '5511987654321',
     endereco: 'Rua das Flores, 123 - Centro',
-    latitude: -23.550520,
-    longitude: -46.633308,
-    distanciaKm: 2.5,
     precoFastlane: 15.00,
     precoVip: 25.00,
-    tipo: 'Italiana',
-    imagem: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80'
+    imagem: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
+    filaAtiva: {
+      id: 'fila-1',
+      tamanhoFila: 8,
+      tempoEstimadoMinutos: 25
+    }
   },
   {
     id: '2',
@@ -378,13 +389,14 @@ const restaurantesMockados = [
     estado: 'SP',
     telefone: '5511987654322',
     endereco: 'Av. Paulista, 1000 - Bela Vista',
-    latitude: -23.561684,
-    longitude: -46.656139,
-    distanciaKm: 3.2,
     precoFastlane: 20.00,
     precoVip: 30.00,
-    tipo: 'Japonesa',
-    imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80'
+    imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80',
+    filaAtiva: {
+      id: 'fila-2',
+      tamanhoFila: 5,
+      tempoEstimadoMinutos: 15
+    }
   },
   {
     id: '3',
@@ -394,19 +406,31 @@ const restaurantesMockados = [
     estado: 'SP',
     telefone: '5511987654323',
     endereco: 'Rua Augusta, 500 - Consolação',
-    latitude: -23.556532,
-    longitude: -46.662755,
-    distanciaKm: 1.8,
     precoFastlane: 18.00,
     precoVip: 28.00,
-    tipo: 'Argentina',
-    imagem: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80'
+    imagem: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
+    filaAtiva: {
+      id: 'fila-3',
+      tamanhoFila: 12,
+      tempoEstimadoMinutos: 35
+    }
   }
 ];
 
+// Função para formatar tempo estimado
+function formatarTempoEstimado(minutos) {
+  if (!minutos) return 'Não disponível';
+  if (minutos < 60) return `~${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  const mins = minutos % 60;
+  return mins > 0 ? `~${horas}h ${mins}min` : `~${horas}h`;
+}
+
 // Componente do Card de Restaurante
 function RestauranteCard({ restaurante, onEntrarFila }) {
-  const temImagem = restaurante.imagem || restaurante.tipo;
+  const filaAtiva = restaurante.filaAtiva || {};
+  const tamanhoFila = filaAtiva.tamanhoFila || 0;
+  const tempoEstimado = filaAtiva.tempoEstimadoMinutos || 0;
   
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
@@ -426,12 +450,10 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
           </div>
         )}
         
-        {/* Badge Popular - Removido pois não vem do backend */}
-        
-        {/* Nome e Tipo sobre a imagem */}
+        {/* Nome sobre a imagem */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <h3 className="text-white text-lg font-bold">{restaurante.nome}</h3>
-          <p className="text-white text-sm opacity-90">{restaurante.tipo || restaurante.cidade}</p>
+          <p className="text-white text-sm opacity-90">{restaurante.cidade}, {restaurante.estado}</p>
         </div>
       </div>
 
@@ -439,16 +461,24 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
       <div className="p-4">
         {/* Localização */}
         <div className="mb-3 text-sm text-gray-600">
-          <p className="mb-1 line-clamp-1">{restaurante.endereco}</p>
-          {restaurante.distanciaKm && (
-            <p className="text-orange-600 font-medium">
-              📍 {restaurante.distanciaKm} km
-            </p>
-          )}
+          <p className="mb-2 line-clamp-1">{restaurante.endereco}</p>
+        </div>
+
+        {/* Informações da Fila */}
+        <div className="mb-4 flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1.5 text-gray-700">
+            <User size={16} className="text-orange-600" />
+            <span className="font-medium">{tamanhoFila}</span>
+            <span className="text-gray-500">na fila</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-gray-700">
+            <Clock size={16} className="text-orange-600" />
+            <span className="font-medium">{formatarTempoEstimado(tempoEstimado)}</span>
+          </div>
         </div>
 
         {/* Botões */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           <button
             onClick={() => onEntrarFila(restaurante, 'NORMAL')}
             className="flex-1 py-2.5 px-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"

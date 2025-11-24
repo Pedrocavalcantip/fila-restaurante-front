@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users } from 'lucide-react';
-import { clienteService } from '../services/api';
 
 export default function CadastroCliente() {
   const [formData, setFormData] = useState({
@@ -33,21 +32,68 @@ export default function CadastroCliente() {
     setLoading(true);
 
     try {
-      const response = await clienteService.cadastrar({
-        ...formData
-      });
+      // ============= MOCK - SEM BACKEND =============
+      // Simulando delay da API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Validações básicas
+      if (formData.senha.length < 6) {
+        throw new Error('A senha deve ter no mínimo 6 caracteres');
+      }
+
+      if (!formData.cpf || formData.cpf.length < 11) {
+        throw new Error('CPF inválido');
+      }
+
+      // Salvar no localStorage (simular banco de dados)
+      const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+      
+      // Verificar se email já existe
+      if (clientesCadastrados.some(c => c.email === formData.email)) {
+        throw new Error('Este email já está cadastrado');
+      }
+
+      // Criar novo cliente
+      const novoCliente = {
+        id: Date.now(),
+        ...formData,
+        vip: false,
+        createdAt: new Date().toISOString()
+      };
+
+      // Salvar na lista de clientes
+      clientesCadastrados.push(novoCliente);
+      localStorage.setItem('clientes', JSON.stringify(clientesCadastrados));
+
+      // Fazer login automático
+      const clienteLogado = {
+        id: novoCliente.id,
+        nome: novoCliente.nome,
+        email: novoCliente.email,
+        telefone: novoCliente.telefone,
+        cpf: novoCliente.cpf,
+        cidade: novoCliente.cidade,
+        estado: novoCliente.estado,
+        vip: false
+      };
+      
+      localStorage.setItem('clienteToken', `mock-token-${novoCliente.id}`);
+      localStorage.setItem('clienteLogado', JSON.stringify(clienteLogado));
+
+      console.log('✅ Cliente cadastrado e logado automaticamente:', clienteLogado);
+      // ============= FIM MOCK =============
 
       setSucesso(true);
       
-      // Redirecionar para login após 2 segundos
+      // Redirecionar para restaurantes após 1.5 segundos
       setTimeout(() => {
-        navigate('/cliente/login');
-      }, 2000);
+        navigate('/cliente/restaurantes');
+      }, 1500);
       
     } catch (error) {
       console.error('Erro ao cadastrar:', error);
       setErro(
-        error.response?.data?.mensagem || 
+        error.message || 
         'Erro ao criar conta. Verifique os dados e tente novamente.'
       );
     } finally {
@@ -88,7 +134,7 @@ export default function CadastroCliente() {
           {sucesso && (
             <div className="mb-5 p-3 bg-green-50 border border-green-200 rounded-md">
               <p className="text-sm text-green-600 text-center">
-                Conta criada com sucesso! Redirecionando...
+                Conta criada com sucesso! Entrando...
               </p>
             </div>
           )}

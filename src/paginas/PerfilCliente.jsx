@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Crown, TrendingUp, UserX, Edit2 } from 'lucide-react';
+import { ArrowLeft, Crown, TrendingUp, UserX, Edit2, History } from 'lucide-react';
 
 export default function PerfilCliente() {
   const [cliente, setCliente] = useState(null);
@@ -114,7 +114,7 @@ export default function PerfilCliente() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => navigate('/cliente/restaurantes')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft size={20} />
@@ -155,6 +155,15 @@ export default function PerfilCliente() {
             </div>
           </div>
         )}
+
+        {/* Botão Ver Histórico Completo */}
+        <button
+          onClick={() => navigate('/cliente/historico')}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <History size={20} />
+          Ver Histórico Completo de Tickets
+        </button>
 
         {/* Estatísticas */}
         <div>

@@ -4,9 +4,8 @@ import { ArrowLeft, Building2 } from 'lucide-react';
 import { authService } from '../services/api';
 
 export default function LoginRestaurante() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('funcionario@restaurante.com');
   const [senha, setSenha] = useState('');
-  const [restauranteSlug, setRestauranteSlug] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
@@ -17,55 +16,28 @@ export default function LoginRestaurante() {
     setLoading(true);
 
     try {
-      // TODO: Integrar com API POST /auth/login
-      // Body: { email, senha, restauranteSlug }
-      // Response: { token, usuario: { id, nome, email, role, restaurante } }
-      
-      // Credenciais de teste
-      const usuariosTest = {
-        'admin@trattoria.com': {
-          senha: 'admin123',
-          role: 'ADMIN',
-          nome: 'Administrador Principal'
-        },
-        'operador@trattoria.com': {
-          senha: 'operador123',
-          role: 'OPERADOR',
-          nome: 'Operador de Filas'
-        }
-      };
-
-      const usuarioTest = usuariosTest[email.toLowerCase()];
-      
-      if (!usuarioTest || usuarioTest.senha !== senha || restauranteSlug !== 'trattoria-bella-vista') {
-        throw new Error('Credenciais inválidas');
-      }
-
-      const mockToken = 'mock-token-' + Date.now();
-      const mockUsuario = {
-        id: 'user-' + Date.now(),
-        nome: usuarioTest.nome,
+      // Simular login do operador/admin
+      const mockToken = 'mock-token-operador-123456';
+      const mockOperador = {
+        id: 'operador-123',
+        nome: 'Operador Teste',
         email: email,
-        role: usuarioTest.role,
+        role: 'OPERADOR',
         restaurante: {
           id: 'rest-123',
           nome: 'Trattoria Bella Vista',
-          slug: restauranteSlug
+          slug: 'trattoria-bella-vista'
         }
       };
 
       localStorage.setItem('token', mockToken);
-      localStorage.setItem('usuario', JSON.stringify(mockUsuario));
+      localStorage.setItem('operador', JSON.stringify(mockOperador));
 
-      // Redirecionar baseado no role
-      if (mockUsuario.role === 'ADMIN') {
-        navigate('/restaurante/painel');
-      } else {
-        navigate('/restaurante/painel-operador');
-      }
+      // Redirecionar para o painel do restaurante
+      navigate('/restaurante/dashboard');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      setErro('Credenciais inválidas. Verifique seus dados e tente novamente.');
+      setErro('Erro ao fazer login. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -107,24 +79,6 @@ export default function LoginRestaurante() {
             </div>
           )}
 
-          {/* Box de Credenciais de Teste */}
-          <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-xs font-semibold text-blue-900 mb-2">🧪 Credenciais de Teste:</p>
-            <div className="space-y-2 text-xs text-blue-800">
-              <div className="bg-white bg-opacity-60 rounded p-2">
-                <p className="font-medium">ADMIN:</p>
-                <p>Email: admin@trattoria.com</p>
-                <p>Senha: admin123</p>
-              </div>
-              <div className="bg-white bg-opacity-60 rounded p-2">
-                <p className="font-medium">OPERADOR:</p>
-                <p>Email: operador@trattoria.com</p>
-                <p>Senha: operador123</p>
-              </div>
-              <p className="text-center mt-2">Slug: <code className="bg-blue-100 px-1 rounded">trattoria-bella-vista</code></p>
-            </div>
-          </div>
-
           {/* Formulário */}
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Campo Email */}
@@ -163,28 +117,6 @@ export default function LoginRestaurante() {
                 required
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
               />
-            </div>
-
-            {/* Campo Slug do Restaurante */}
-            <div>
-              <label 
-                htmlFor="restauranteSlug" 
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Identificador do Restaurante
-              </label>
-              <input
-                id="restauranteSlug"
-                type="text"
-                placeholder="trattoria-bella-vista"
-                value={restauranteSlug}
-                onChange={(e) => setRestauranteSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                required
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Slug único do seu restaurante (fornecido no cadastro)
-              </p>
             </div>
 
             {/* Botão Entrar */}

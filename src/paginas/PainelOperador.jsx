@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function PainelOperador() {
@@ -220,14 +220,31 @@ function PainelOperador() {
                 <p className="text-sm text-gray-600">Gerencie os clientes em tempo real</p>
               </div>
             </div>
-            <button
-              onClick={atualizarFila}
-              disabled={atualizando}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${atualizando ? 'animate-spin' : ''}`} />
-              Atualizar
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate('/publico/painel')}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                title="Painel Público (TV)"
+              >
+                <Tv className="w-4 h-4" />
+                Painel TV
+              </button>
+              <button
+                onClick={() => navigate('/restaurante/historico-tickets')}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                <History className="w-4 h-4" />
+                Histórico
+              </button>
+              <button
+                onClick={atualizarFila}
+                disabled={atualizando}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${atualizando ? 'animate-spin' : ''}`} />
+                Atualizar
+              </button>
+            </div>
           </div>
         </div>
       </div>

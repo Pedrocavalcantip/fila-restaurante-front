@@ -12,6 +12,8 @@ export default function AcompanharFila() {
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [erro, setErro] = useState('');
   const [menuAberto, setMenuAberto] = useState(false);
+  const [modalCancelarAberto, setModalCancelarAberto] = useState(false);
+  const [loadingCancelar, setLoadingCancelar] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -103,14 +105,26 @@ export default function AcompanharFila() {
 
   const carregarTicket = async () => {
     try {
-      // TODO: Integrar com API GET /cliente/meu-ticket
+      // Primeiro tentar buscar do localStorage
+      const ticketLocal = localStorage.getItem('ticketAtivo');
+      
+      if (ticketLocal) {
+        const ticketData = JSON.parse(ticketLocal);
+        setTicket(ticketData);
+        setErro('');
+        setLoading(false);
+        console.log('✅ Ticket carregado do localStorage:', ticketData);
+        return;
+      }
+
+      // Se não tiver no localStorage, tentar API
       const response = await clienteService.buscarMeuTicket();
       setTicket(response);
       setErro('');
     } catch (error) {
       console.error('Erro ao buscar ticket:', error);
       
-      // Se não encontrar, usar dados mockados
+      // Se não encontrar nem no localStorage nem na API, usar dados mockados
       setTicket({
         id: 'mock-ticket-123',
         numero: 2847,
@@ -138,19 +152,33 @@ export default function AcompanharFila() {
     }
   };
 
-  const handleCancelarTicket = async () => {
-    if (!window.confirm('Tem certeza que deseja cancelar seu ticket?')) {
-      return;
-    }
+  const handleAbrirModalCancelar = () => {
+    setModalCancelarAberto(true);
+  };
+
+  const handleFecharModalCancelar = () => {
+    setModalCancelarAberto(false);
+  };
+
+  const handleConfirmarCancelamento = async () => {
+    setLoadingCancelar(true);
+    setErro('');
 
     try {
       // TODO: Integrar com API POST /cliente/ticket/{ticketId}/cancelar
-      await clienteService.cancelarTicket(ticket.id, 'Cancelado pelo cliente');
+      // await clienteService.cancelarTicket(ticket.id);
+      
+      // Mock: Remover ticket do localStorage
       localStorage.removeItem('ticketAtivo');
+      console.log('✅ Ticket cancelado com sucesso');
+      
+      // Fechar modal e redirecionar
+      setModalCancelarAberto(false);
       navigate('/cliente/restaurantes');
     } catch (error) {
       console.error('Erro ao cancelar ticket:', error);
       setErro('Erro ao cancelar ticket. Tente novamente.');
+      setLoadingCancelar(false);
     }
   };
 
@@ -240,22 +268,22 @@ export default function AcompanharFila() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
-            onClick={() => navigate('/cliente/restaurantes')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft size={20} />
             <span className="font-medium">Voltar</span>
           </button>
           
-          <h1 className="text-lg font-bold text-gray-900">
+          <h1 className="text-lg font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
             {abaAtiva === 'fila' ? ticket?.restaurante?.nome : 'Meu Histórico'}
           </h1>
           
           {/* Menu de Perfil */}
-          <div className="relative">
+          <div className="relative z-50">
             <button
               onClick={() => setMenuAberto(!menuAberto)}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -269,12 +297,12 @@ export default function AcompanharFila() {
               <>
                 {/* Overlay para fechar ao clicar fora */}
                 <div 
-                  className="fixed inset-0 z-10" 
+                  className="fixed inset-0 z-40" 
                   onClick={() => setMenuAberto(false)}
                 ></div>
                 
                 {/* Menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                   <button
                     onClick={handlePerfil}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
@@ -297,7 +325,7 @@ export default function AcompanharFila() {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-10">
+      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-20">
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex gap-6">
             <button
@@ -388,59 +416,75 @@ export default function AcompanharFila() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Status do Atendimento</h2>
           
           <div className="space-y-3">
-            {/* Ticket Confirmado */}
+            {/* Ticket Confirmado - Sempre completo */}
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center mt-0.5">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">Ticket Confirmado</p>
-                <p className="text-xs text-gray-500">14:30</p>
+                {ticket?.criadoEm && (
+                  <p className="text-xs text-gray-500">{formatarHora(ticket.criadoEm)}</p>
+                )}
               </div>
             </div>
 
-            {/* Na Fila */}
+            {/* Na Fila - Sempre completo quando ticket existe */}
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center mt-0.5">
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">Na Fila</p>
-                <p className="text-xs text-gray-500">14:35</p>
+                <p className="text-xs text-gray-500">Aguardando ser chamado</p>
               </div>
             </div>
 
-            {/* Próximo na Fila */}
+            {/* Chamado - Completo apenas se status for CHAMADO */}
             <div className="flex items-start gap-3">
-              <div className={`w-6 h-6 rounded-full border-2 ${isChamado || isAtendendo ? 'bg-orange-600 border-orange-600' : 'border-orange-300'} flex items-center justify-center mt-0.5`}>
-                {(isChamado || isAtendendo) && <div className="w-2 h-2 bg-white rounded-full"></div>}
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO'
+                  ? 'bg-orange-600 border-orange-600'
+                  : 'border-orange-300'
+              }`}>
+                {(ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO') && (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
               </div>
               <div className="flex-1">
-                <p className={`text-sm font-medium ${isChamado || isAtendendo ? 'text-orange-600' : 'text-gray-400'}`}>
-                  Próximo na Fila
+                <p className={`text-sm font-medium ${
+                  ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO'
+                    ? 'text-orange-600'
+                    : 'text-gray-400'
+                }`}>
+                  Chamado
                 </p>
-                {(isChamado || isAtendendo) && <p className="text-xs text-gray-500">Agora</p>}
-                {!isChamado && !isAtendendo && (
+                {ticket?.status === 'CHAMADO' && (
+                  <p className="text-xs text-orange-600 font-medium">Por favor, dirija-se ao restaurante!</p>
+                )}
+                {ticket?.status === 'AGUARDANDO' && (
                   <p className="text-xs text-gray-500">Fique atento! Você será chamado em breve.</p>
                 )}
               </div>
             </div>
 
-            {/* Chamado */}
+            {/* Mesa Pronta / Finalizado */}
             <div className="flex items-start gap-3">
-              <div className={`w-6 h-6 rounded-full border-2 ${isChamado || isAtendendo ? 'border-gray-300' : 'border-gray-200'} flex items-center justify-center mt-0.5`}>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                ticket?.status === 'FINALIZADO'
+                  ? 'bg-green-600 border-green-600'
+                  : 'border-gray-200'
+              }`}>
+                {ticket?.status === 'FINALIZADO' && (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-400">Chamado</p>
-              </div>
-            </div>
-
-            {/* Mesa Pronta */}
-            <div className="flex items-start gap-3">
-              <div className={`w-6 h-6 rounded-full border-2 ${isAtendendo ? 'border-gray-300' : 'border-gray-200'} flex items-center justify-center mt-0.5`}>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-400">Mesa Pronta</p>
+                <p className={`text-sm font-medium ${
+                  ticket?.status === 'FINALIZADO' ? 'text-green-600' : 'text-gray-400'
+                }`}>
+                  Mesa Pronta
+                </p>
               </div>
             </div>
           </div>
@@ -468,7 +512,7 @@ export default function AcompanharFila() {
           </button>
           
           <button
-            onClick={handleCancelarTicket}
+            onClick={handleAbrirModalCancelar}
             className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
           >
             Cancelar Ticket
@@ -624,6 +668,60 @@ export default function AcompanharFila() {
             </div>
           )}
         </main>
+      )}
+
+      {/* Modal de Confirmação de Cancelamento */}
+      {modalCancelarAberto && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
+          onClick={handleFecharModalCancelar}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header do Modal */}
+            <div className="p-6 pb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle size={24} className="text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+                Cancelar Ticket?
+              </h2>
+              <p className="text-sm text-gray-600 text-center">
+                Tem certeza que deseja cancelar seu ticket? Esta ação não pode ser desfeita.
+              </p>
+            </div>
+
+            {/* Mensagem de Erro */}
+            {erro && (
+              <div className="px-6 pb-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600">{erro}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Botões */}
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={handleFecharModalCancelar}
+                disabled={loadingCancelar}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                Não, manter ticket
+              </button>
+              <button
+                onClick={handleConfirmarCancelamento}
+                disabled={loadingCancelar}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium text-sm transition-colors disabled:opacity-50"
+              >
+                {loadingCancelar ? 'Cancelando...' : 'Sim, cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
