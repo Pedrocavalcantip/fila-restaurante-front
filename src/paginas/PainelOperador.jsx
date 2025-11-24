@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function PainelOperador() {
@@ -10,6 +10,8 @@ function PainelOperador() {
   const [loading, setLoading] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
   const [filaId, setFilaId] = useState('fila-123'); // TODO: Obter do contexto/localStorage
+  const [ticketSelecionado, setTicketSelecionado] = useState(null);
+  const [modalAberto, setModalAberto] = useState(false);
 
   // Carregar fila a cada 5 segundos (polling - substituir por WebSocket)
   useEffect(() => {
@@ -178,6 +180,27 @@ function PainelOperador() {
     return `${minutos} min`;
   };
 
+  const abrirDetalhes = (ticket) => {
+    setTicketSelecionado(ticket);
+    setModalAberto(true);
+  };
+
+  const fecharModal = () => {
+    setModalAberto(false);
+    setTicketSelecionado(null);
+  };
+
+  const formatarDataHora = (dataISO) => {
+    const data = new Date(dataISO);
+    return data.toLocaleString('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -271,7 +294,10 @@ function PainelOperador() {
               {tickets.map((ticket) => (
                 <div key={ticket.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between gap-6">
-                    <div className="flex items-start gap-4 flex-1">
+                    <div 
+                      className="flex items-start gap-4 flex-1 cursor-pointer"
+                      onClick={() => abrirDetalhes(ticket)}
+                    >
                       {/* Número e Posição */}
                       <div className="flex-shrink-0">
                         <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex flex-col items-center justify-center shadow-md">
@@ -283,7 +309,12 @@ function PainelOperador() {
                       {/* Informações do Cliente */}
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <h3 className="text-xl font-bold text-gray-900">{ticket.nomeCliente}</h3>
+                          <h3 
+                            className="text-xl font-bold text-gray-900 hover:text-orange-600 transition-colors"
+                            title="Ver detalhes"
+                          >
+                            {ticket.nomeCliente}
+                          </h3>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             ticket.prioridade === 'FAST_LANE' 
                               ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' 
@@ -335,7 +366,7 @@ function PainelOperador() {
                     </div>
 
                     {/* Ações */}
-                    <div className="flex flex-col gap-2 min-w-[180px]">
+                    <div className="flex flex-col gap-2 min-w-[180px]" onClick={(e) => e.stopPropagation()}>
                       {ticket.status === 'AGUARDANDO' && (
                         <>
                           <button
@@ -393,6 +424,186 @@ function PainelOperador() {
           )}
         </div>
       </div>
+
+      {/* Modal de Detalhes do Ticket */}
+      {modalAberto && ticketSelecionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={fecharModal}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header do Modal */}
+            <div className="sticky top-0 bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-t-2xl">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">{ticketSelecionado.nomeCliente}</h2>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-medium">
+                      Ticket {ticketSelecionado.numero}
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      ticketSelecionado.status === 'CHAMADO'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {ticketSelecionado.status}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={fecharModal}
+                  className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="p-6 space-y-6">
+              {/* Informações Principais */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-orange-50 rounded-xl p-4">
+                  <p className="text-xs text-orange-600 font-medium mb-1">Posição na Fila</p>
+                  <p className="text-3xl font-bold text-orange-600">{ticketSelecionado.posicao}º</p>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <p className="text-xs text-blue-600 font-medium mb-1">Tempo de Espera</p>
+                  <p className="text-3xl font-bold text-blue-600">{formatarTempoEspera(ticketSelecionado.criadoEm)}</p>
+                </div>
+              </div>
+
+              {/* Detalhes do Cliente */}
+              <div className="bg-gray-50 rounded-xl p-5">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Informações do Cliente
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium mb-1">Telefone</p>
+                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-500" />
+                      {formatarTelefone(ticketSelecionado.telefone)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium mb-1">Quantidade de Pessoas</p>
+                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-500" />
+                      {ticketSelecionado.quantidadePessoas} pessoa{ticketSelecionado.quantidadePessoas > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium mb-1">Prioridade</p>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                      ticketSelecionado.prioridade === 'FAST_LANE' 
+                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' 
+                        : ticketSelecionado.prioridade === 'VIP'
+                        ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                        : 'bg-blue-100 text-blue-800 border border-blue-300'
+                    }`}>
+                      {ticketSelecionado.prioridade === 'FAST_LANE' ? 'Fast Lane' : ticketSelecionado.prioridade === 'VIP' ? 'VIP' : 'Normal'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600 font-medium mb-1">Tempo Estimado</p>
+                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      {ticketSelecionado.tempoEstimadoMinutos || 0} minutos
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observações */}
+              {ticketSelecionado.observacoes && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                  <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Observações
+                  </h3>
+                  <p className="text-sm text-blue-800">{ticketSelecionado.observacoes}</p>
+                </div>
+              )}
+
+              {/* Informações de Chamadas */}
+              {ticketSelecionado.chamadasCount > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
+                  <h3 className="text-lg font-bold text-yellow-900 mb-3 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Status de Chamadas
+                  </h3>
+                  <p className="text-sm text-yellow-800">
+                    Cliente foi chamado <strong>{ticketSelecionado.chamadasCount}x</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Histórico de Timestamps */}
+              <div className="bg-gray-50 rounded-xl p-5">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Histórico
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Ticket Criado</p>
+                      <p className="text-xs text-gray-600">{formatarDataHora(ticketSelecionado.criadoEm)}</p>
+                    </div>
+                  </div>
+                  {ticketSelecionado.status === 'CHAMADO' && (
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">Cliente Chamado</p>
+                        <p className="text-xs text-gray-600">Aguardando confirmação</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer com Ações */}
+            <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">
+              <div className="flex gap-3">
+                {ticketSelecionado.status === 'AGUARDANDO' && (
+                  <>
+                    <button
+                      onClick={() => { chamarCliente(ticketSelecionado.id); fecharModal(); }}
+                      className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                    >
+                      🔔 Chamar Cliente
+                    </button>
+                    <button
+                      onClick={() => { cancelarTicket(ticketSelecionado.id); fecharModal(); }}
+                      className="px-4 py-3 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all font-semibold"
+                    >
+                      Cancelar
+                    </button>
+                  </>
+                )}
+                {ticketSelecionado.status === 'CHAMADO' && (
+                  <>
+                    <button
+                      onClick={() => { finalizarAtendimento(ticketSelecionado.id); fecharModal(); }}
+                      className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                    >
+                      Finalizar
+                    </button>
+                    <button
+                      onClick={() => { rechamarCliente(ticketSelecionado.id); fecharModal(); }}
+                      className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                    >
+                      🔁 Rechamar
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

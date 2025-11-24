@@ -1,25 +1,105 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Clock, Users, AlertCircle, User, LogOut } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Users, AlertCircle, User, LogOut, History, CheckCircle, XCircle, UserX } from 'lucide-react';
 import { clienteService, publicoService } from '../services/api';
 
 export default function AcompanharFila() {
+  const [abaAtiva, setAbaAtiva] = useState('fila'); // 'fila' ou 'historico'
   const [ticket, setTicket] = useState(null);
+  const [historico, setHistorico] = useState([]);
+  const [filtroStatus, setFiltroStatus] = useState('TODOS');
   const [loading, setLoading] = useState(true);
+  const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [erro, setErro] = useState('');
   const [menuAberto, setMenuAberto] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    carregarTicket();
-    
-    // Atualizar a cada 10 segundos
-    const interval = setInterval(() => {
+    if (abaAtiva === 'fila') {
       carregarTicket();
-    }, 10000);
+      
+      // Atualizar a cada 10 segundos
+      const interval = setInterval(() => {
+        carregarTicket();
+      }, 10000);
 
-    return () => clearInterval(interval);
-  }, []);
+      return () => clearInterval(interval);
+    } else if (abaAtiva === 'historico') {
+      carregarHistorico();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abaAtiva]);
+
+  const carregarHistorico = async () => {
+    try {
+      setLoadingHistorico(true);
+      // TODO: Integrar com API GET /cliente/tickets/historico
+      // Query params: ?status=FINALIZADO,CANCELADO,NO_SHOW
+      
+      // Mock data
+      const mockHistorico = [
+        {
+          id: 'ticket-h1',
+          numero: 'A-120',
+          status: 'FINALIZADO',
+          prioridade: 'NORMAL',
+          quantidadePessoas: 2,
+          restaurante: {
+            nome: 'Trattoria Bella Vista',
+            endereco: 'Rua Augusta, 1234'
+          },
+          criadoEm: '2025-11-20T19:30:00.000Z',
+          finalizadoEm: '2025-11-20T20:15:00.000Z'
+        },
+        {
+          id: 'ticket-h2',
+          numero: 'A-085',
+          status: 'FINALIZADO',
+          prioridade: 'FAST_LANE',
+          quantidadePessoas: 4,
+          restaurante: {
+            nome: 'Pizzaria Napolitana',
+            endereco: 'Av. Paulista, 1000'
+          },
+          criadoEm: '2025-11-18T20:00:00.000Z',
+          finalizadoEm: '2025-11-18T20:25:00.000Z'
+        },
+        {
+          id: 'ticket-h3',
+          numero: 'A-056',
+          status: 'CANCELADO',
+          prioridade: 'NORMAL',
+          quantidadePessoas: 3,
+          restaurante: {
+            nome: 'Sushi House',
+            endereco: 'Rua Oscar Freire, 500'
+          },
+          criadoEm: '2025-11-15T18:45:00.000Z',
+          canceladoEm: '2025-11-15T19:00:00.000Z',
+          motivoCancelamento: 'Cliente desistiu'
+        },
+        {
+          id: 'ticket-h4',
+          numero: 'A-034',
+          status: 'NO_SHOW',
+          prioridade: 'NORMAL',
+          quantidadePessoas: 2,
+          restaurante: {
+            nome: 'Burger Station',
+            endereco: 'Rua da Consolação, 800'
+          },
+          criadoEm: '2025-11-10T21:00:00.000Z',
+          noShowEm: '2025-11-10T21:35:00.000Z'
+        }
+      ];
+      
+      setHistorico(mockHistorico);
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+    } finally {
+      setLoadingHistorico(false);
+    }
+  };
 
   const carregarTicket = async () => {
     try {
@@ -90,6 +170,45 @@ export default function AcompanharFila() {
     navigate('/cliente/perfil');
   };
 
+  const formatarData = (dataISO) => {
+    const data = new Date(dataISO);
+    return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatarHora = (dataISO) => {
+    const data = new Date(dataISO);
+    return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const calcularTempoTotal = (inicio, fim) => {
+    const diffMs = new Date(fim) - new Date(inicio);
+    const minutos = Math.floor(diffMs / 60000);
+    return minutos;
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'FINALIZADO':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <CheckCircle size={12} /> Finalizado
+        </span>;
+      case 'CANCELADO':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          <XCircle size={12} /> Cancelado
+        </span>;
+      case 'NO_SHOW':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+          <UserX size={12} /> Não Compareceu
+        </span>;
+      default:
+        return null;
+    }
+  };
+
+  const historicoFiltrado = historico.filter(t => 
+    filtroStatus === 'TODOS' || t.status === filtroStatus
+  );
+
   if (loading && !ticket) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -131,7 +250,9 @@ export default function AcompanharFila() {
             <span className="font-medium">Voltar</span>
           </button>
           
-          <h1 className="text-lg font-bold text-gray-900">{ticket?.restaurante?.nome}</h1>
+          <h1 className="text-lg font-bold text-gray-900">
+            {abaAtiva === 'fila' ? ticket?.restaurante?.nome : 'Meu Histórico'}
+          </h1>
           
           {/* Menu de Perfil */}
           <div className="relative">
@@ -175,12 +296,44 @@ export default function AcompanharFila() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        {/* Endereço */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin size={16} />
-          <span>{ticket?.restaurante?.endereco}</span>
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-10">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="flex gap-6">
+            <button
+              onClick={() => setAbaAtiva('fila')}
+              className={`py-3 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                abaAtiva === 'fila'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Clock size={18} />
+              Fila Atual
+            </button>
+            <button
+              onClick={() => setAbaAtiva('historico')}
+              className={`py-3 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                abaAtiva === 'historico'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <History size={18} />
+              Histórico
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Conteúdo da Aba Fila */}
+      {abaAtiva === 'fila' && (
+        <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+          {/* Endereço */}
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <MapPin size={16} />
+            <span>{ticket?.restaurante?.endereco}</span>
+          </div>
 
         {/* Card de Posição na Fila */}
         <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 text-center">
@@ -321,7 +474,157 @@ export default function AcompanharFila() {
             Cancelar Ticket
           </button>
         </div>
-      </main>
+        </main>
+      )}
+
+      {/* Conteúdo da Aba Histórico */}
+      {abaAtiva === 'historico' && (
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          {/* Filtros */}
+          <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">Filtrar por status</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFiltroStatus('TODOS')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filtroStatus === 'TODOS'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setFiltroStatus('FINALIZADO')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filtroStatus === 'FINALIZADO'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Finalizados
+              </button>
+              <button
+                onClick={() => setFiltroStatus('CANCELADO')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filtroStatus === 'CANCELADO'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Cancelados
+              </button>
+              <button
+                onClick={() => setFiltroStatus('NO_SHOW')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filtroStatus === 'NO_SHOW'
+                    ? 'bg-gray-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Não Compareceu
+              </button>
+            </div>
+          </div>
+
+          {/* Lista de Histórico */}
+          {loadingHistorico ? (
+            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mb-4"></div>
+              <p className="text-gray-600">Carregando histórico...</p>
+            </div>
+          ) : historicoFiltrado.length === 0 ? (
+            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+              <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600">Nenhum ticket no histórico</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {filtroStatus !== 'TODOS' ? 'Tente alterar o filtro' : 'Seus tickets anteriores aparecerão aqui'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {historicoFiltrado.map((ticket) => (
+                <div key={ticket.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{ticket.restaurante.nome}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                        <MapPin size={14} />
+                        <span>{ticket.restaurante.endereco}</span>
+                      </div>
+                    </div>
+                    {getStatusBadge(ticket.status)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <span className="text-xs text-gray-500">Ticket</span>
+                      <p className="text-sm font-semibold text-gray-900">TKT-{ticket.numero}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Prioridade</span>
+                      <p className="text-sm font-medium text-gray-900">
+                        {ticket.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Pessoas</span>
+                      <p className="text-sm font-medium text-gray-900">{ticket.quantidadePessoas}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500">Data</span>
+                      <p className="text-sm font-medium text-gray-900">{formatarData(ticket.criadoEm)}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
+                    <div className="flex items-center gap-4">
+                      <span>
+                        Entrada: {formatarHora(ticket.criadoEm)}
+                      </span>
+                      {ticket.finalizadoEm && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Saída: {formatarHora(ticket.finalizadoEm)}
+                          </span>
+                          <span>•</span>
+                          <span className="font-medium text-orange-600">
+                            Duração: {calcularTempoTotal(ticket.criadoEm, ticket.finalizadoEm)} min
+                          </span>
+                        </>
+                      )}
+                      {ticket.canceladoEm && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Cancelado: {formatarHora(ticket.canceladoEm)}
+                          </span>
+                        </>
+                      )}
+                      {ticket.noShowEm && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            No-show: {formatarHora(ticket.noShowEm)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {ticket.motivoCancelamento && (
+                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-xs font-medium text-red-900">Motivo do cancelamento:</p>
+                      <p className="text-sm text-red-700 mt-1">{ticket.motivoCancelamento}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      )}
     </div>
   );
 }

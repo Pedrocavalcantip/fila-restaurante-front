@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, UserPlus, Trash2, User } from 'lucide-react';
+import { ArrowLeft, UserPlus, Trash2, User, Settings, DollarSign, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function Gerenciamento() {
   const navigate = useNavigate();
+  const [abaAtiva, setAbaAtiva] = useState('equipe'); // 'equipe' ou 'configuracoes'
   
   // Dados mock da equipe
   const [membrosEquipe, setMembrosEquipe] = useState([
@@ -35,6 +36,28 @@ function Gerenciamento() {
     role: 'OPERADOR'
   });
 
+  // Configurações do Restaurante
+  const [configuracoes, setConfiguracoes] = useState({
+    nome: 'Trattoria Bella Vista',
+    slug: 'trattoria-bella-vista',
+    telefone: '11987654321',
+    endereco: 'Rua Augusta, 1234 - São Paulo',
+    capacidade: 50,
+    tempoMedioAtendimentoMinutos: 45,
+    precoFastlane: 15.00,
+    precoVip: 30.00,
+    maxReentradasPorDia: 2,
+    horarios: {
+      segunda: { aberto: true, inicio: '11:00', fim: '23:00' },
+      terca: { aberto: true, inicio: '11:00', fim: '23:00' },
+      quarta: { aberto: true, inicio: '11:00', fim: '23:00' },
+      quinta: { aberto: true, inicio: '11:00', fim: '23:00' },
+      sexta: { aberto: true, inicio: '11:00', fim: '00:00' },
+      sabado: { aberto: true, inicio: '11:00', fim: '00:00' },
+      domingo: { aberto: true, inicio: '11:00', fim: '22:00' }
+    }
+  });
+
   const handleAdicionarMembro = (e) => {
     e.preventDefault();
     const novoId = Math.max(...membrosEquipe.map(m => m.id)) + 1;
@@ -48,6 +71,36 @@ function Gerenciamento() {
       setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== id));
     }
   };
+
+  const handleSalvarConfiguracoes = (e) => {
+    e.preventDefault();
+    // TODO: Integrar com API PUT /restaurantes/{restauranteId}
+    console.log('Salvando configurações:', configuracoes);
+    alert('Configurações salvas com sucesso!');
+  };
+
+  const handleHorarioChange = (dia, campo, valor) => {
+    setConfiguracoes(prev => ({
+      ...prev,
+      horarios: {
+        ...prev.horarios,
+        [dia]: {
+          ...prev.horarios[dia],
+          [campo]: valor
+        }
+      }
+    }));
+  };
+
+  const diasSemana = [
+    { key: 'segunda', label: 'Segunda-feira' },
+    { key: 'terca', label: 'Terça-feira' },
+    { key: 'quarta', label: 'Quarta-feira' },
+    { key: 'quinta', label: 'Quinta-feira' },
+    { key: 'sexta', label: 'Sexta-feira' },
+    { key: 'sabado', label: 'Sábado' },
+    { key: 'domingo', label: 'Domingo' }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -80,15 +133,26 @@ function Gerenciamento() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-8">
             <button
-              className="py-4 px-2 font-medium border-b-2 border-orange-600 text-orange-600 transition-colors"
+              onClick={() => setAbaAtiva('equipe')}
+              className={`py-4 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                abaAtiva === 'equipe'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
             >
+              <User className="w-4 h-4" />
               Equipe
             </button>
             <button
-              onClick={() => navigate('/restaurante/gerenciamento/filas')}
-              className="py-4 px-2 font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-900 transition-colors"
+              onClick={() => setAbaAtiva('configuracoes')}
+              className={`py-4 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                abaAtiva === 'configuracoes'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
             >
-              Filas
+              <Settings className="w-4 h-4" />
+              Configurações
             </button>
           </div>
         </div>
@@ -97,74 +161,251 @@ function Gerenciamento() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Aba Equipe */}
-        <div className="bg-white rounded-xl shadow">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Membros da Equipe</h2>
-                <p className="text-sm text-gray-600 mt-1">Gerencie os operadores e gerentes do restaurante</p>
+        {abaAtiva === 'equipe' && (
+          <div className="bg-white rounded-xl shadow">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Membros da Equipe</h2>
+                  <p className="text-sm text-gray-600 mt-1">Gerencie os operadores e gerentes do restaurante</p>
+                </div>
+                <button
+                  onClick={() => setMostrarModalOperador(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Adicionar Operador
+                </button>
               </div>
-              <button
-                onClick={() => setMostrarModalOperador(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium"
-              >
-                <UserPlus className="w-4 h-4" />
-                Adicionar Operador
-              </button>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Nome
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {membrosEquipe.map((membro) => (
+                      <tr key={membro.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-gray-900">{membro.nome}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-600">{membro.email}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            membro.role === 'ADMIN'
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {membro.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => removerMembro(membro.id)}
+                              className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                              title="Remover membro"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        )}
+
+        {/* Aba Configurações */}
+        {abaAtiva === 'configuracoes' && (
+          <div className="space-y-6">
+            {/* Informações Básicas */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Informações Básicas
+              </h2>
+              <form onSubmit={handleSalvarConfiguracoes} className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Nome do Restaurante</label>
+                    <input
+                      type="text"
+                      value={configuracoes.nome}
+                      onChange={(e) => setConfiguracoes({...configuracoes, nome: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      placeholder="Ex: Trattoria Bella Vista"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Slug (URL)</label>
+                    <input
+                      type="text"
+                      value={configuracoes.slug}
+                      onChange={(e) => setConfiguracoes({...configuracoes, slug: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-gray-50"
+                      placeholder="trattoria-bella-vista"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Telefone</label>
+                    <input
+                      type="tel"
+                      value={configuracoes.telefone}
+                      onChange={(e) => setConfiguracoes({...configuracoes, telefone: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      placeholder="11987654321"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Capacidade (mesas/pessoas)</label>
+                    <input
+                      type="number"
+                      value={configuracoes.capacidade}
+                      onChange={(e) => setConfiguracoes({...configuracoes, capacidade: parseInt(e.target.value)})}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Endereço Completo</label>
+                  <input
+                    type="text"
+                    value={configuracoes.endereco}
+                    onChange={(e) => setConfiguracoes({...configuracoes, endereco: e.target.value})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    placeholder="Rua Augusta, 1234 - São Paulo"
+                  />
+                </div>
+              </form>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Nome
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {membrosEquipe.map((membro) => (
-                    <tr key={membro.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900">{membro.nome}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600">{membro.email}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          membro.role === 'ADMIN'
-                            ? 'bg-purple-100 text-purple-800'
-                            : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {membro.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => removerMembro(membro.id)}
-                            className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                            title="Remover membro"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Configurações de Fila */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Configurações de Fila
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Tempo Médio de Atendimento (min)</label>
+                  <input
+                    type="number"
+                    value={configuracoes.tempoMedioAtendimentoMinutos}
+                    onChange={(e) => setConfiguracoes({...configuracoes, tempoMedioAtendimentoMinutos: parseInt(e.target.value)})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    placeholder="45"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Máx. Reentradas por Dia</label>
+                  <input
+                    type="number"
+                    value={configuracoes.maxReentradasPorDia}
+                    onChange={(e) => setConfiguracoes({...configuracoes, maxReentradasPorDia: parseInt(e.target.value)})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    placeholder="2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Preço Fast Lane (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={configuracoes.precoFastlane}
+                    onChange={(e) => setConfiguracoes({...configuracoes, precoFastlane: parseFloat(e.target.value)})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    placeholder="15.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">Preço VIP (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={configuracoes.precoVip}
+                    onChange={(e) => setConfiguracoes({...configuracoes, precoVip: parseFloat(e.target.value)})}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    placeholder="30.00"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Horários de Funcionamento */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Horários de Funcionamento
+              </h2>
+              <div className="space-y-4">
+                {diasSemana.map((dia) => (
+                  <div key={dia.key} className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0">
+                    <div className="w-32">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={configuracoes.horarios[dia.key].aberto}
+                          onChange={(e) => handleHorarioChange(dia.key, 'aberto', e.target.checked)}
+                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                        />
+                        <span className="text-sm font-medium text-gray-900">{dia.label}</span>
+                      </label>
+                    </div>
+                    {configuracoes.horarios[dia.key].aberto && (
+                      <div className="flex items-center gap-3 flex-1">
+                        <input
+                          type="time"
+                          value={configuracoes.horarios[dia.key].inicio}
+                          onChange={(e) => handleHorarioChange(dia.key, 'inicio', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                        />
+                        <span className="text-gray-500">até</span>
+                        <input
+                          type="time"
+                          value={configuracoes.horarios[dia.key].fim}
+                          onChange={(e) => handleHorarioChange(dia.key, 'fim', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                        />
+                      </div>
+                    )}
+                    {!configuracoes.horarios[dia.key].aberto && (
+                      <span className="text-sm text-gray-500 italic">Fechado</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Botão Salvar */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleSalvarConfiguracoes}
+                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-semibold shadow-md hover:shadow-lg"
+              >
+                Salvar Configurações
+              </button>
             </div>
           </div>
+        )}
       </div>
 
       {/* Modal Adicionar Operador */}
