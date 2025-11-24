@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Flame } from 'lucide-react';
 
 export default function EntrarNaFila() {
   const { slug } = useParams();
@@ -8,7 +8,7 @@ export default function EntrarNaFila() {
   const navigate = useNavigate();
   
   const restaurante = location.state?.restaurante;
-  const tipoFilaInicial = location.state?.tipoFila || 'NORMAL';
+  const prioridadeInicial = location.state?.prioridade || 'NORMAL';
 
   const [quantidadePessoas, setQuantidadePessoas] = useState(1);
   const [observacoes, setObservacoes] = useState('');
@@ -24,15 +24,16 @@ export default function EntrarNaFila() {
     setLoading(true);
 
     try {
-      // Simular entrada na fila
+      // TODO: Integrar com API POST /cliente/restaurantes/{slug}/fila/entrar
+      // Body: { quantidadePessoas, prioridade, observacoes }
       const ticketMock = {
         id: 'ticket-' + Date.now(),
         numero: Math.floor(Math.random() * 9000) + 1000,
         status: 'AGUARDANDO',
-        tipoFila: tipoFilaInicial,
-        posicaoAtual: tipoFilaInicial === 'FAST_LANE' ? 2 : 8,
+        prioridade: prioridadeInicial,
+        posicaoAtual: prioridadeInicial === 'FAST_LANE' ? 2 : 8,
         quantidadePessoas: quantidadePessoas,
-        tempoEstimadoMinutos: tipoFilaInicial === 'FAST_LANE' ? 10 : 25,
+        tempoEstimadoMinutos: prioridadeInicial === 'FAST_LANE' ? 10 : 25,
         observacoes: observacoes,
         restaurante: restaurante || {
           nome: 'Restaurante',
@@ -69,8 +70,8 @@ export default function EntrarNaFila() {
     );
   }
 
-  const isFastLane = tipoFilaInicial === 'FAST_LANE';
-  const valorFastLane = 15.00;
+  const isFastLane = prioridadeInicial === 'FAST_LANE';
+  const valorFastLane = restaurante?.precoFastlane || 15.00;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
@@ -78,8 +79,15 @@ export default function EntrarNaFila() {
         {/* Header do Modal */}
         <div className="flex items-center justify-between p-6 pb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              {isFastLane ? 'Entrada VIP / Fast Lane' : 'Entrar na Fila Normal'}
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              {isFastLane ? (
+                <>
+                  <Flame size={24} className="text-orange-600" />
+                  Entrada Fast Lane
+                </>
+              ) : (
+                'Entrar na Fila Normal'
+              )}
             </h2>
             <p className="text-sm text-gray-500 mt-1">{restaurante.nome}</p>
           </div>

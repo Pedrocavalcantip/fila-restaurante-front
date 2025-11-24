@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, UserPlus, Edit2, Trash2, User } from 'lucide-react';
+import { ArrowLeft, UserPlus, Trash2, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function Gerenciamento() {
@@ -11,32 +11,42 @@ function Gerenciamento() {
       id: 1,
       nome: 'Carlos Silva',
       email: 'carlos.silva@restaurant.com',
-      cargo: 'Operador'
+      role: 'OPERADOR'
     },
     {
       id: 2,
       nome: 'Ana Martins',
       email: 'ana.martins@restaurant.com',
-      cargo: 'Operador'
+      role: 'OPERADOR'
     },
     {
       id: 3,
       nome: 'João Santos',
       email: 'joao.santos@restaurant.com',
-      cargo: 'Gerente'
-    },
-    {
-      id: 4,
-      nome: 'Mariana Costa',
-      email: 'mariana.costa@restaurant.com',
-      cargo: 'Operador'
+      role: 'ADMIN'
     }
   ]);
 
   const [mostrarModalOperador, setMostrarModalOperador] = useState(false);
+  const [novoMembro, setNovoMembro] = useState({
+    nome: '',
+    email: '',
+    senha: '',
+    role: 'OPERADOR'
+  });
+
+  const handleAdicionarMembro = (e) => {
+    e.preventDefault();
+    const novoId = Math.max(...membrosEquipe.map(m => m.id)) + 1;
+    setMembrosEquipe([...membrosEquipe, { ...novoMembro, id: novoId }]);
+    setNovoMembro({ nome: '', email: '', senha: '', role: 'OPERADOR' });
+    setMostrarModalOperador(false);
+  };
 
   const removerMembro = (id) => {
-    setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== id));
+    if (window.confirm('Tem certeza que deseja remover este membro?')) {
+      setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== id));
+    }
   };
 
   return (
@@ -113,7 +123,7 @@ function Gerenciamento() {
                       Email
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Cargo
+                      Role
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
                       Ações
@@ -131,21 +141,19 @@ function Gerenciamento() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          membro.cargo === 'Gerente'
+                          membro.role === 'ADMIN'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-orange-100 text-orange-800'
                         }`}>
-                          {membro.cargo}
+                          {membro.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="p-2 text-gray-600 hover:text-blue-600 transition-colors">
-                            <Edit2 className="w-4 h-4" />
-                          </button>
                           <button
                             onClick={() => removerMembro(membro.id)}
-                            className="p-2 text-gray-600 hover:text-orange-600 transition-colors"
+                            className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                            title="Remover membro"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -172,11 +180,14 @@ function Gerenciamento() {
               </svg>
             </button>
             <h3 className="text-2xl font-bold text-gray-900 mb-6">Adicionar Novo Membro da Equipe</h3>
-            <form className="space-y-5">
+            <form onSubmit={handleAdicionarMembro} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">Nome Completo</label>
                 <input
                   type="text"
+                  value={novoMembro.nome}
+                  onChange={(e) => setNovoMembro({...novoMembro, nome: e.target.value})}
+                  required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
                   placeholder="Ex: João Silva"
                 />
@@ -185,22 +196,36 @@ function Gerenciamento() {
                 <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
                 <input
                   type="email"
+                  value={novoMembro.email}
+                  onChange={(e) => setNovoMembro({...novoMembro, email: e.target.value})}
+                  required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-600"
                   placeholder="joao.silva@restaurant.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Cargo</label>
-                <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-600 bg-white">
-                  <option value="">Selecione o cargo</option>
-                  <option value="operador">Operador</option>
-                  <option value="gerente">Gerente</option>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Role</label>
+                <select 
+                  value={novoMembro.role}
+                  onChange={(e) => setNovoMembro({...novoMembro, role: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-600 bg-white"
+                >
+                  <option value="OPERADOR">OPERADOR</option>
+                  <option value="ADMIN">ADMIN</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  ADMIN tem acesso total, OPERADOR gerencia apenas filas
+                </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Criar Senha</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Senha Inicial</label>
                 <input
                   type="password"
+                  value={novoMembro.senha}
+                  onChange={(e) => setNovoMembro({...novoMembro, senha: e.target.value})}
+                  required
+                  minLength={6}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
                   placeholder="••••••••"
                 />

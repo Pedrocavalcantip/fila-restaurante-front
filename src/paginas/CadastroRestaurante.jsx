@@ -6,6 +6,12 @@ import { restauranteService } from '../services/api';
 export default function CadastroRestaurante() {
   const [formData, setFormData] = useState({
     nome: '',
+    slug: '',
+    emailAdmin: '',
+    senhaAdmin: '',
+    precoFastlane: 15,
+    precoVip: 25,
+    maxReentradasPorDia: 3,
     cnpj: '',
     telefone: '',
     cep: '',
@@ -13,10 +19,7 @@ export default function CadastroRestaurante() {
     numero: '',
     bairro: '',
     cidade: '',
-    estado: 'SP',
-    nomeResponsavel: '',
-    emailAcesso: '',
-    senha: ''
+    estado: 'SP'
   });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -25,10 +28,29 @@ export default function CadastroRestaurante() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Auto-gerar slug a partir do nome
+    if (name === 'nome') {
+      const slugGerado = value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      
+      setFormData(prev => ({
+        ...prev,
+        nome: value,
+        slug: slugGerado
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const formatCNPJ = (value) => {
@@ -78,7 +100,10 @@ export default function CadastroRestaurante() {
     setLoading(true);
 
     try {
-      // Simular cadastro sem backend
+      // TODO: Integrar com API POST /restaurantes/cadastro
+      // Body: { nome, slug, emailAdmin, senhaAdmin, precoFastlane, precoVip, maxReentradasPorDia, ...endereco }
+      // Response 201: { restaurante, admin, linkAcesso }
+      
       setSucesso(true);
       
       // Redirecionar para login após 3 segundos
@@ -171,6 +196,26 @@ export default function CadastroRestaurante() {
                   />
                 </div>
 
+                {/* Slug (Auto-gerado) */}
+                <div>
+                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
+                    Identificador (Slug) *
+                  </label>
+                  <input
+                    id="slug"
+                    name="slug"
+                    type="text"
+                    placeholder="trattoria-bella-vista"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Gerado automaticamente. Use apenas letras minúsculas, números e hífens.
+                  </p>
+                </div>
+
                 {/* CNPJ e Telefone */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -204,6 +249,68 @@ export default function CadastroRestaurante() {
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* CONFIGURAÇÕES DE FILA */}
+            <div>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+                Configurações de Fila
+              </h2>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label htmlFor="precoFastlane" className="block text-sm font-medium text-gray-700 mb-1">
+                      Preço Fast Lane (R$) *
+                    </label>
+                    <input
+                      id="precoFastlane"
+                      name="precoFastlane"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.precoFastlane}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="precoVip" className="block text-sm font-medium text-gray-700 mb-1">
+                      Preço VIP (R$) *
+                    </label>
+                    <input
+                      id="precoVip"
+                      name="precoVip"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.precoVip}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="maxReentradasPorDia" className="block text-sm font-medium text-gray-700 mb-1">
+                      Max. Reentradas/Dia *
+                    </label>
+                    <input
+                      id="maxReentradasPorDia"
+                      name="maxReentradasPorDia"
+                      type="number"
+                      min="1"
+                      value={formData.maxReentradasPorDia}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Defina os preços para as filas prioritárias e o limite de reentradas diárias por cliente.
+                </p>
               </div>
             </div>
 
@@ -322,58 +429,44 @@ export default function CadastroRestaurante() {
               </div>
             </div>
 
-            {/* DADOS DO RESPONSÁVEL */}
+            {/* DADOS DO ADMINISTRADOR */}
             <div>
               <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
-                Dados do Responsável
+                Dados do Administrador
               </h2>
               
               <div className="space-y-4">
-                {/* Nome do Responsável */}
-                <div>
-                  <label htmlFor="nomeResponsavel" className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome do Responsável *
-                  </label>
-                  <input
-                    id="nomeResponsavel"
-                    name="nomeResponsavel"
-                    type="text"
-                    placeholder="João Silva"
-                    value={formData.nomeResponsavel}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-                  />
-                </div>
-
                 {/* Email de Acesso */}
                 <div>
-                  <label htmlFor="emailAcesso" className="block text-sm font-medium text-gray-700 mb-1">
-                    E-mail de Acesso *
+                  <label htmlFor="emailAdmin" className="block text-sm font-medium text-gray-700 mb-1">
+                    E-mail do Administrador *
                   </label>
                   <input
-                    id="emailAcesso"
-                    name="emailAcesso"
+                    id="emailAdmin"
+                    name="emailAdmin"
                     type="email"
                     placeholder="admin@restaurante.com"
-                    value={formData.emailAcesso}
+                    value={formData.emailAdmin}
                     onChange={handleChange}
                     required
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Este será o login do administrador principal
+                  </p>
                 </div>
 
                 {/* Senha */}
                 <div>
-                  <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-1">
-                    Senha *
+                  <label htmlFor="senhaAdmin" className="block text-sm font-medium text-gray-700 mb-1">
+                    Senha do Administrador *
                   </label>
                   <input
-                    id="senha"
-                    name="senha"
+                    id="senhaAdmin"
+                    name="senhaAdmin"
                     type="password"
                     placeholder="Mínimo 8 caracteres"
-                    value={formData.senha}
+                    value={formData.senhaAdmin}
                     onChange={handleChange}
                     required
                     minLength={8}

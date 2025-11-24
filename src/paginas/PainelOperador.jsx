@@ -1,68 +1,85 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function PainelOperador() {
   const navigate = useNavigate();
-  const [fila, setFila] = useState([]);
+  const [filaData, setFilaData] = useState(null);
+  const [tickets, setTickets] = useState([]);
+  const [estatisticas, setEstatisticas] = useState(null);
   const [loading, setLoading] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
+  const [filaId, setFilaId] = useState('fila-123'); // TODO: Obter do contexto/localStorage
 
-  // Simular dados da fila
+  // Carregar fila a cada 5 segundos (polling - substituir por WebSocket)
   useEffect(() => {
     carregarFila();
+    const interval = setInterval(carregarFila, 5000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const carregarFila = async () => {
     setLoading(true);
     try {
-      // Simular chamada à API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // TODO: Integrar com API GET /tickets/filas/{filaId}/tickets/ativa
+      // Response: { fila, tickets, estatisticas: { totalAguardando, totalChamados } }
       
-      const filaMock = [
-        {
-          id: 1,
-          cliente: 'João Silva',
-          telefone: '(11) 98765-4321',
-          tipo: 'NORMAL',
-          posicao: 1,
-          tempoEspera: '5 min',
-          horarioEntrada: '19:30',
-          status: 'AGUARDANDO'
+      const mockData = {
+        fila: {
+          id: 'fila-123',
+          nome: 'Fila Principal',
+          restauranteId: 'rest-123'
         },
-        {
-          id: 2,
-          cliente: 'Maria Santos',
-          telefone: '(11) 98765-1234',
-          tipo: 'FAST_LANE',
-          posicao: 2,
-          tempoEspera: '3 min',
-          horarioEntrada: '19:35',
-          status: 'AGUARDANDO'
-        },
-        {
-          id: 3,
-          cliente: 'Carlos Oliveira',
-          telefone: '(11) 98765-5678',
-          tipo: 'NORMAL',
-          posicao: 3,
-          tempoEspera: '12 min',
-          horarioEntrada: '19:32',
-          status: 'AGUARDANDO'
-        },
-        {
-          id: 4,
-          cliente: 'Ana Paula',
-          telefone: '(11) 98765-9999',
-          tipo: 'NORMAL',
-          posicao: 4,
-          tempoEspera: '18 min',
-          horarioEntrada: '19:28',
-          status: 'AGUARDANDO'
+        tickets: [
+          {
+            id: 'ticket-1',
+            numero: 'A-023',
+            nomeCliente: 'João Silva',
+            telefone: '11987654321',
+            quantidadePessoas: 2,
+            prioridade: 'NORMAL',
+            status: 'AGUARDANDO',
+            posicao: 1,
+            tempoEstimadoMinutos: 5,
+            criadoEm: new Date(Date.now() - 5 * 60000).toISOString(),
+            observacoes: 'Cadeira de bebê'
+          },
+          {
+            id: 'ticket-2',
+            numero: 'A-024',
+            nomeCliente: 'Maria Santos',
+            telefone: '11987651234',
+            quantidadePessoas: 4,
+            prioridade: 'FAST_LANE',
+            status: 'AGUARDANDO',
+            posicao: 2,
+            tempoEstimadoMinutos: 3,
+            criadoEm: new Date(Date.now() - 3 * 60000).toISOString()
+          },
+          {
+            id: 'ticket-3',
+            numero: 'A-025',
+            nomeCliente: 'Carlos Oliveira',
+            telefone: '11987655678',
+            quantidadePessoas: 2,
+            prioridade: 'NORMAL',
+            status: 'CHAMADO',
+            posicao: 3,
+            tempoEstimadoMinutos: 0,
+            chamadasCount: 1,
+            criadoEm: new Date(Date.now() - 12 * 60000).toISOString()
+          }
+        ],
+        estatisticas: {
+          totalAguardando: 2,
+          totalChamados: 1
         }
-      ];
+      };
       
-      setFila(filaMock);
+      setFilaData(mockData.fila);
+      setTickets(mockData.tickets);
+      setEstatisticas(mockData.estatisticas);
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
     } finally {
@@ -76,20 +93,89 @@ function PainelOperador() {
     setAtualizando(false);
   };
 
-  const chamarCliente = (clienteId) => {
-    // Lógica para chamar o próximo cliente
-    console.log('Chamando cliente:', clienteId);
-    // Aqui você pode adicionar notificação, SMS, etc.
+  const chamarCliente = async (ticketId) => {
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/chamar
+      // Muda status AGUARDANDO -> CHAMADO, emite WebSocket
+      console.log('Chamando cliente:', ticketId);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao chamar cliente:', error);
+    }
   };
 
-  const atenderCliente = (clienteId) => {
-    setFila(fila.filter(item => item.id !== clienteId));
-    console.log('Cliente atendido:', clienteId);
+  const rechamarCliente = async (ticketId) => {
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/rechamar
+      // Incrementa contagemRechamada, mantém status CHAMADO
+      console.log('Rechamando cliente:', ticketId);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao rechamar cliente:', error);
+    }
   };
 
-  const removerCliente = (clienteId) => {
-    setFila(fila.filter(item => item.id !== clienteId));
-    console.log('Cliente removido:', clienteId);
+  const finalizarAtendimento = async (ticketId) => {
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/finalizar
+      // Muda status para FINALIZADO
+      console.log('Finalizando atendimento:', ticketId);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao finalizar atendimento:', error);
+    }
+  };
+
+  const pularVez = async (ticketId) => {
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/pular
+      // Retorna ticket para o fim da fila (CHAMADO -> AGUARDANDO)
+      console.log('Pulando vez:', ticketId);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao pular vez:', error);
+    }
+  };
+
+  const marcarNoShow = async (ticketId) => {
+    if (!window.confirm('Confirmar que o cliente não apareceu?')) return;
+    
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/no-show
+      // Status NO_SHOW, incrementa estatística do cliente
+      console.log('Marcando no-show:', ticketId);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao marcar no-show:', error);
+    }
+  };
+
+  const cancelarTicket = async (ticketId) => {
+    const motivo = window.prompt('Motivo do cancelamento:');
+    if (!motivo) return;
+
+    try {
+      // TODO: Integrar com API POST /tickets/{ticketId}/cancelar
+      // Body: { motivo }, Status CANCELADO
+      console.log('Cancelando ticket:', ticketId, motivo);
+      await carregarFila();
+    } catch (error) {
+      console.error('Erro ao cancelar ticket:', error);
+    }
+  };
+
+  const formatarTelefone = (tel) => {
+    if (!tel) return '';
+    const num = tel.replace(/\D/g, '');
+    if (num.length === 11) {
+      return `(${num.slice(0, 2)}) ${num.slice(2, 7)}-${num.slice(7)}`;
+    }
+    return tel;
+  };
+
+  const formatarTempoEspera = (criadoEm) => {
+    const minutos = Math.floor((Date.now() - new Date(criadoEm)) / 60000);
+    return `${minutos} min`;
   };
 
   return (
@@ -130,8 +216,8 @@ function PainelOperador() {
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total na Fila</p>
-                <p className="text-3xl font-bold text-gray-900">{fila.length}</p>
+                <p className="text-sm text-gray-600 mb-1">Aguardando</p>
+                <p className="text-3xl font-bold text-gray-900">{estatisticas?.totalAguardando || 0}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                 <Users className="w-6 h-6 text-orange-600" />
@@ -142,11 +228,11 @@ function PainelOperador() {
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Tempo Médio</p>
-                <p className="text-3xl font-bold text-gray-900">8 min</p>
+                <p className="text-sm text-gray-600 mb-1">Chamados</p>
+                <p className="text-3xl font-bold text-gray-900">{estatisticas?.totalChamados || 0}</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <Clock className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <Clock className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
@@ -154,11 +240,11 @@ function PainelOperador() {
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Atendidos Hoje</p>
-                <p className="text-3xl font-bold text-gray-900">24</p>
+                <p className="text-sm text-gray-600 mb-1">Total na Fila</p>
+                <p className="text-3xl font-bold text-gray-900">{tickets.length}</p>
               </div>
-              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -175,74 +261,130 @@ function PainelOperador() {
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
               <p className="mt-4 text-gray-600">Carregando fila...</p>
             </div>
-          ) : fila.length === 0 ? (
+          ) : tickets.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600">Nenhum cliente na fila no momento</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {fila.map((item) => (
-                <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      {/* Posição */}
+              {tickets.map((ticket) => (
+                <div key={ticket.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* Número e Posição */}
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                          <span className="text-xl font-bold text-orange-600">{item.posicao}</span>
+                        <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex flex-col items-center justify-center shadow-md">
+                          <span className="text-xs text-white font-medium opacity-90">{ticket.numero}</span>
+                          <span className="text-3xl font-bold text-white">{ticket.posicao}º</span>
                         </div>
                       </div>
 
                       {/* Informações do Cliente */}
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="text-lg font-semibold text-gray-900">{item.cliente}</h3>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            item.tipo === 'FAST_LANE' 
-                              ? 'bg-yellow-100 text-yellow-800' 
-                              : 'bg-blue-100 text-blue-800'
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-xl font-bold text-gray-900">{ticket.nomeCliente}</h3>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            ticket.prioridade === 'FAST_LANE' 
+                              ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' 
+                              : ticket.prioridade === 'VIP'
+                              ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
                           }`}>
-                            {item.tipo === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
+                            {ticket.prioridade === 'FAST_LANE' ? 'Fast Lane' : ticket.prioridade === 'VIP' ? 'VIP' : 'Normal'}
+                          </span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            ticket.status === 'CHAMADO'
+                              ? 'bg-green-100 text-green-800 border border-green-300'
+                              : 'bg-gray-100 text-gray-800 border border-gray-300'
+                          }`}>
+                            {ticket.status === 'CHAMADO' ? 'CHAMADO' : 'AGUARDANDO'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{item.telefone}</span>
+                        
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm mb-3">
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Phone className="w-4 h-4 text-gray-500" />
+                            <span>{formatarTelefone(ticket.telefone)}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>Entrou às {item.horarioEntrada}</span>
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Users className="w-4 h-4 text-gray-500" />
+                            <span>{ticket.quantidadePessoas} pessoa{ticket.quantidadePessoas > 1 ? 's' : ''}</span>
                           </div>
-                          <span className="font-medium text-orange-600">
-                            Aguardando {item.tempoEspera}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-orange-500" />
+                            <span className="font-semibold text-orange-600">
+                              Aguardando {formatarTempoEspera(ticket.criadoEm)}
+                            </span>
+                          </div>
+                          {ticket.chamadasCount > 0 && (
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-yellow-600" />
+                              <span className="font-medium text-yellow-700">Chamado {ticket.chamadasCount}x</span>
+                            </div>
+                          )}
                         </div>
+
+                        {ticket.observacoes && (
+                          <div className="flex items-start gap-2 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <span className="text-blue-600 text-sm">💬</span>
+                            <span className="text-sm text-blue-800 font-medium">{ticket.observacoes}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Ações */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => chamarCliente(item.id)}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
-                      >
-                        Chamar
-                      </button>
-                      <button
-                        onClick={() => atenderCliente(item.id)}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        Atender
-                      </button>
-                      <button
-                        onClick={() => removerCliente(item.id)}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        Remover
-                      </button>
+                    <div className="flex flex-col gap-2 min-w-[180px]">
+                      {ticket.status === 'AGUARDANDO' && (
+                        <>
+                          <button
+                            onClick={() => chamarCliente(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            🔔 Chamar Cliente
+                          </button>
+                          <button
+                            onClick={() => cancelarTicket(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Cancelar
+                          </button>
+                        </>
+                      )}
+                      
+                      {ticket.status === 'CHAMADO' && (
+                        <>
+                          <button
+                            onClick={() => finalizarAtendimento(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            Finalizar
+                          </button>
+                          <button
+                            onClick={() => rechamarCliente(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            🔁 Rechamar
+                          </button>
+                          <button
+                            onClick={() => pularVez(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <SkipForward className="w-4 h-4" />
+                            Pular Vez
+                          </button>
+                          <button
+                            onClick={() => marcarNoShow(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            No-Show
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -23,6 +23,7 @@ export default function AcompanharFila() {
 
   const carregarTicket = async () => {
     try {
+      // TODO: Integrar com API GET /cliente/meu-ticket
       const response = await clienteService.buscarMeuTicket();
       setTicket(response);
       setErro('');
@@ -34,23 +35,23 @@ export default function AcompanharFila() {
         id: 'mock-ticket-123',
         numero: 2847,
         status: 'AGUARDANDO',
-        prioridade: 'VIP',
+        prioridade: 'NORMAL',
         posicaoAtual: 5,
         tempoEstimadoMinutos: 15,
         quantidadePessoas: 4,
+        observacoes: 'Mesa perto da janela se possível',
         restaurante: {
           nome: 'Trattoria Bella Vista',
           telefone: '5511987654321',
-          endereco: 'Rua Augusta, 1234 - São Paulo'
+          endereco: 'Rua Augusta, 1234 - São Paulo',
+          slug: 'trattoria-bella-vista'
         },
         fila: {
+          id: 'fila-123',
           nome: 'Fila Principal'
         },
-        historico: [
-          { evento: 'CRIADO', criadoEm: '2025-11-18T14:30:00.000Z' },
-          { evento: 'NA_FILA', criadoEm: '2025-11-18T14:35:00.000Z' }
-        ],
-        criadoEm: '2025-11-18T14:30:00.000Z'
+        criadoEm: '2025-11-24T14:30:00.000Z',
+        atualizadoEm: '2025-11-24T14:35:00.000Z'
       });
     } finally {
       setLoading(false);
@@ -63,7 +64,9 @@ export default function AcompanharFila() {
     }
 
     try {
+      // TODO: Integrar com API POST /cliente/ticket/{ticketId}/cancelar
       await clienteService.cancelarTicket(ticket.id, 'Cancelado pelo cliente');
+      localStorage.removeItem('ticketAtivo');
       navigate('/cliente/restaurantes');
     } catch (error) {
       console.error('Erro ao cancelar ticket:', error);
@@ -206,8 +209,7 @@ export default function AcompanharFila() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Tipo de Fila</span>
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                {ticket?.prioridade === 'VIP' ? 'Fast Lane VIP' : 
-                 ticket?.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
+                {ticket?.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
               </span>
             </div>
             
@@ -218,6 +220,13 @@ export default function AcompanharFila() {
                 {ticket?.quantidadePessoas || 4} pessoas
               </div>
             </div>
+
+            {ticket?.observacoes && (
+              <div className="pt-2 border-t border-gray-100">
+                <span className="text-sm text-gray-600">Observações</span>
+                <p className="text-sm text-gray-900 mt-1">{ticket.observacoes}</p>
+              </div>
+            )}
           </div>
         </div>
 

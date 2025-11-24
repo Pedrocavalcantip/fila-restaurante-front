@@ -10,7 +10,7 @@ export default function RestaurantesDisponiveis() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const [restauranteSelecionado, setRestauranteSelecionado] = useState(null);
-  const [tipoFilaSelecionado, setTipoFilaSelecionado] = useState('NORMAL');
+  const [prioridadeSelecionada, setPrioridadeSelecionada] = useState('NORMAL');
   const [quantidadePessoas, setQuantidadePessoas] = useState(1);
   const [observacoes, setObservacoes] = useState('');
   const [loadingConfirmar, setLoadingConfirmar] = useState(false);
@@ -77,9 +77,9 @@ export default function RestaurantesDisponiveis() {
     }
   };
 
-  const handleEntrarNaFila = (restaurante, tipoFila = 'NORMAL') => {
+  const handleEntrarNaFila = (restaurante, prioridade = 'NORMAL') => {
     setRestauranteSelecionado(restaurante);
-    setTipoFilaSelecionado(tipoFila);
+    setPrioridadeSelecionada(prioridade);
     setQuantidadePessoas(1);
     setObservacoes('');
     setErro('');
@@ -97,15 +97,16 @@ export default function RestaurantesDisponiveis() {
     setLoadingConfirmar(true);
 
     try {
-      // Simular entrada na fila
+      // TODO: Integrar com API POST /cliente/restaurantes/{slug}/fila/entrar
+      // Body: { quantidadePessoas, prioridade, observacoes }
       const ticketMock = {
         id: 'ticket-' + Date.now(),
         numero: Math.floor(Math.random() * 9000) + 1000,
         status: 'AGUARDANDO',
-        tipoFila: tipoFilaSelecionado,
-        posicaoAtual: tipoFilaSelecionado === 'FAST_LANE' ? 2 : 8,
+        prioridade: prioridadeSelecionada,
+        posicaoAtual: prioridadeSelecionada === 'FAST_LANE' ? 2 : 8,
         quantidadePessoas: quantidadePessoas,
-        tempoEstimadoMinutos: tipoFilaSelecionado === 'FAST_LANE' ? 10 : 25,
+        tempoEstimadoMinutos: prioridadeSelecionada === 'FAST_LANE' ? 10 : 25,
         observacoes: observacoes,
         restaurante: restauranteSelecionado
       };
@@ -257,7 +258,7 @@ export default function RestaurantesDisponiveis() {
             <div className="flex items-center justify-between p-6 pb-4">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  {tipoFilaSelecionado === 'FAST_LANE' ? 'Entrada VIP / Fast Lane' : 'Entrar na Fila Normal'}
+                  {prioridadeSelecionada === 'FAST_LANE' ? 'Entrada Fast Lane' : 'Entrar na Fila Normal'}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">{restauranteSelecionado.nome}</p>
               </div>
@@ -304,11 +305,13 @@ export default function RestaurantesDisponiveis() {
               </div>
 
               {/* Box de Valor Fast Lane */}
-              {tipoFilaSelecionado === 'FAST_LANE' && (
+              {prioridadeSelecionada === 'FAST_LANE' && (
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-medium text-gray-900">Valor Fast Lane</p>
-                    <p className="text-lg font-bold text-orange-600">R$ 15,00</p>
+                    <p className="text-lg font-bold text-orange-600">
+                      R$ {restauranteSelecionado.precoFastlane?.toFixed(2) || '15,00'}
+                    </p>
                   </div>
                   <p className="text-xs text-gray-600">
                     Pagamento processado após confirmação
@@ -362,6 +365,8 @@ const restaurantesMockados = [
     latitude: -23.550520,
     longitude: -46.633308,
     distanciaKm: 2.5,
+    precoFastlane: 15.00,
+    precoVip: 25.00,
     tipo: 'Italiana',
     imagem: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80'
   },
@@ -376,6 +381,8 @@ const restaurantesMockados = [
     latitude: -23.561684,
     longitude: -46.656139,
     distanciaKm: 3.2,
+    precoFastlane: 20.00,
+    precoVip: 30.00,
     tipo: 'Japonesa',
     imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80'
   },
@@ -390,6 +397,8 @@ const restaurantesMockados = [
     latitude: -23.556532,
     longitude: -46.662755,
     distanciaKm: 1.8,
+    precoFastlane: 18.00,
+    precoVip: 28.00,
     tipo: 'Argentina',
     imagem: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80'
   }
@@ -448,9 +457,10 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
           </button>
           <button
             onClick={() => onEntrarFila(restaurante, 'FAST_LANE')}
-            className="flex-1 py-2.5 px-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex-1 py-2.5 px-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
           >
-            Comprar VIP
+            <Flame size={16} />
+            Fast Lane
           </button>
         </div>
       </div>

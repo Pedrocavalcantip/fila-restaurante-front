@@ -6,9 +6,10 @@ export default function PerfilCliente() {
   const [cliente, setCliente] = useState(null);
   const [editando, setEditando] = useState(false);
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
+    nome: '',
     email: '',
     telefone: '',
+    cpf: '',
     cidade: '',
     estado: ''
   });
@@ -25,32 +26,36 @@ export default function PerfilCliente() {
       const clienteData = JSON.parse(clienteStorage);
       setCliente(clienteData);
       setFormData({
-        nomeCompleto: clienteData.nomeCompleto || 'Maria Silva',
+        nome: clienteData.nome || 'Maria Silva',
         email: clienteData.email || 'maria.silva@email.com',
         telefone: clienteData.telefone || '(11) 98765-4321',
+        cpf: clienteData.cpf || '000.000.000-00',
         cidade: clienteData.cidade || 'São Paulo',
         estado: clienteData.estado || 'SP'
       });
     } else {
       // Dados mockados - só para desenvolvimento
       const mockCliente = {
-        nomeCompleto: 'Maria Silva',
+        nome: 'Maria Silva',
         email: 'maria.silva@email.com',
         telefone: '(11) 98765-4321',
+        cpf: '123.456.789-00',
         cidade: 'São Paulo',
         estado: 'SP',
-        isVip: true, // Mock sempre VIP para teste
-        estatisticas: {
-          totalVisitas: 24,
-          vezesNaFastLane: 8,
-          noShows: 0
-        }
+        isVip: true,
+        vipDesde: '2024-01-15',
+        status: 'ATIVO',
+        totalVisitas: 24,
+        totalFastLane: 8,
+        totalVip: 5,
+        totalNoShows: 0
       };
       setCliente(mockCliente);
       setFormData({
-        nomeCompleto: mockCliente.nomeCompleto,
+        nome: mockCliente.nome,
         email: mockCliente.email,
         telefone: mockCliente.telefone,
+        cpf: mockCliente.cpf,
         cidade: mockCliente.cidade,
         estado: mockCliente.estado
       });
@@ -79,9 +84,10 @@ export default function PerfilCliente() {
   const handleCancelar = () => {
     // Restaurar dados originais
     setFormData({
-      nomeCompleto: cliente.nomeCompleto,
+      nome: cliente.nome,
       email: cliente.email,
       telefone: cliente.telefone,
+      cpf: cliente.cpf,
       cidade: cliente.cidade,
       estado: cliente.estado
     });
@@ -163,7 +169,7 @@ export default function PerfilCliente() {
               </div>
               <p className="text-xs text-gray-600 mb-1">Total de Visitas</p>
               <p className="text-3xl font-bold text-gray-900">
-                {cliente.estatisticas?.totalVisitas || 24}
+                {cliente.totalVisitas || 0}
               </p>
             </div>
 
@@ -176,7 +182,7 @@ export default function PerfilCliente() {
               </div>
               <p className="text-xs text-gray-600 mb-1">Vezes na Fast Lane</p>
               <p className="text-3xl font-bold text-gray-900">
-                {cliente.estatisticas?.vezesNaFastLane || 8}
+                {cliente.totalFastLane || 0}
               </p>
             </div>
 
@@ -189,7 +195,7 @@ export default function PerfilCliente() {
               </div>
               <p className="text-xs text-gray-600 mb-1">No-Shows</p>
               <p className="text-3xl font-bold text-gray-900">
-                {cliente.estatisticas?.noShows || 0}
+                {cliente.totalNoShows || 0}
               </p>
             </div>
           </div>
@@ -225,14 +231,14 @@ export default function PerfilCliente() {
                 {editando ? (
                   <input
                     type="text"
-                    name="nomeCompleto"
-                    value={formData.nomeCompleto}
+                    name="nome"
+                    value={formData.nome}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
                   />
                 ) : (
                   <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
-                    {formData.nomeCompleto}
+                    {formData.nome}
                   </p>
                 )}
               </div>
@@ -258,7 +264,7 @@ export default function PerfilCliente() {
               </div>
             </div>
 
-            {/* Telefone e Cidade */}
+            {/* Telefone e CPF */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -270,6 +276,7 @@ export default function PerfilCliente() {
                     name="telefone"
                     value={formData.telefone}
                     onChange={handleChange}
+                    maxLength="15"
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
                   />
                 ) : (
@@ -279,6 +286,29 @@ export default function PerfilCliente() {
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  CPF
+                </label>
+                {editando ? (
+                  <input
+                    type="text"
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleChange}
+                    maxLength="14"
+                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-md">
+                    {formData.cpf}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Cidade */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Cidade

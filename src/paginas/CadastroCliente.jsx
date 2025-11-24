@@ -5,10 +5,11 @@ import { clienteService } from '../services/api';
 
 export default function CadastroCliente() {
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
-    telefone: '',
+    nome: '',
     email: '',
+    telefone: '',
     senha: '',
+    cpf: '',
     cidade: '',
     estado: ''
   });
@@ -32,10 +33,7 @@ export default function CadastroCliente() {
     setLoading(true);
 
     try {
-      const restauranteSlug = 'pizzaria-bella-napoli';
-      
       const response = await clienteService.cadastrar({
-        restauranteSlug,
         ...formData
       });
 
@@ -107,17 +105,37 @@ export default function CadastroCliente() {
             {/* Nome Completo */}
             <div>
               <label 
-                htmlFor="nomeCompleto" 
+                htmlFor="nome" 
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
                 Nome Completo
               </label>
               <input
-                id="nomeCompleto"
-                name="nomeCompleto"
+                id="nome"
+                name="nome"
                 type="text"
                 placeholder="João Silva"
-                value={formData.nomeCompleto}
+                value={formData.nome}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label 
+                htmlFor="email" 
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
@@ -144,22 +162,23 @@ export default function CadastroCliente() {
               />
             </div>
 
-            {/* Email */}
+            {/* CPF */}
             <div>
               <label 
-                htmlFor="email" 
+                htmlFor="cpf" 
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Email
+                CPF
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={formData.email}
+                id="cpf"
+                name="cpf"
+                type="text"
+                placeholder="000.000.000-00"
+                value={formData.cpf}
                 onChange={handleChange}
                 required
+                maxLength={14}
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
               />
             </div>
