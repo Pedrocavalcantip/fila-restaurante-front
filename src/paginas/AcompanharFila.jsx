@@ -35,67 +35,18 @@ export default function AcompanharFila() {
   const carregarHistorico = async () => {
     try {
       setLoadingHistorico(true);
-      // TODO: Integrar com API GET /cliente/tickets/historico
-      // Query params: ?status=FINALIZADO,CANCELADO,NO_SHOW
+      // Integrar com API do cliente para buscar histórico
+      console.log('ℹ️ Carregando histórico de tickets do cliente...');
       
-      // Mock data
-      const mockHistorico = [
-        {
-          id: 'ticket-h1',
-          numero: 'A-120',
-          status: 'FINALIZADO',
-          prioridade: 'NORMAL',
-          quantidadePessoas: 2,
-          restaurante: {
-            nome: 'Trattoria Bella Vista',
-            endereco: 'Rua Augusta, 1234'
-          },
-          criadoEm: '2025-11-20T19:30:00.000Z',
-          finalizadoEm: '2025-11-20T20:15:00.000Z'
-        },
-        {
-          id: 'ticket-h2',
-          numero: 'A-085',
-          status: 'FINALIZADO',
-          prioridade: 'FAST_LANE',
-          quantidadePessoas: 4,
-          restaurante: {
-            nome: 'Pizzaria Napolitana',
-            endereco: 'Av. Paulista, 1000'
-          },
-          criadoEm: '2025-11-18T20:00:00.000Z',
-          finalizadoEm: '2025-11-18T20:25:00.000Z'
-        },
-        {
-          id: 'ticket-h3',
-          numero: 'A-056',
-          status: 'CANCELADO',
-          prioridade: 'NORMAL',
-          quantidadePessoas: 3,
-          restaurante: {
-            nome: 'Sushi House',
-            endereco: 'Rua Oscar Freire, 500'
-          },
-          criadoEm: '2025-11-15T18:45:00.000Z',
-          canceladoEm: '2025-11-15T19:00:00.000Z',
-          motivoCancelamento: 'Cliente desistiu'
-        },
-        {
-          id: 'ticket-h4',
-          numero: 'A-034',
-          status: 'NO_SHOW',
-          prioridade: 'NORMAL',
-          quantidadePessoas: 2,
-          restaurante: {
-            nome: 'Burger Station',
-            endereco: 'Rua da Consolação, 800'
-          },
-          criadoEm: '2025-11-10T21:00:00.000Z',
-          noShowEm: '2025-11-10T21:35:00.000Z'
-        }
-      ];
-      
-      setHistorico(mockHistorico);
+      try {
+        const response = await clienteService.buscarHistoricoTickets();
+        setHistorico(response.tickets || response);
+        console.log('✅ Histórico carregado:', response);
+      } catch (error) {
+        // Se o endpoint ainda não existir no backend, mostrar array vazio
+        console.warn('⚠️ Endpoint de histórico ainda não implementado no backend');
+        setHistorico([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
     } finally {

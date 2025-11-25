@@ -25,11 +25,36 @@ export default function RestaurantesDisponiveis() {
     try {
       // Buscar restaurantes próximos
       try {
+        console.log('🔍 Buscando restaurantes do backend...');
         const responseRestaurantes = await clienteService.buscarRestaurantes();
-        setRestaurantes(responseRestaurantes.restaurantes || []);
+        console.log('✅ Resposta COMPLETA do backend:', JSON.stringify(responseRestaurantes, null, 2));
+        
+        // Aceita tanto array direto quanto objeto com propriedade restaurantes
+        const restaurantesData = Array.isArray(responseRestaurantes) 
+          ? responseRestaurantes 
+          : (responseRestaurantes.restaurantes || []);
+        
+        console.log(`✅ ${restaurantesData.length} restaurante(s) encontrado(s)`);
+        console.log('📊 Dados dos restaurantes:', restaurantesData);
+        setRestaurantes(restaurantesData);
+        setErro(''); // Limpar erro se sucesso
       } catch (error) {
-        // Se falhar, usar dados mockados
-        setRestaurantes(restaurantesMockados);
+        console.error('❌ Erro ao buscar restaurantes:', error);
+        console.error('❌ Detalhes:', error.response?.data || error.message);
+        console.error('❌ Tipo de erro:', error.name);
+        
+        // Verificar se é erro de conexão
+        if (error.name === 'FetchError' || error.message.includes('fetch')) {
+          setErro('Erro de conexão com o servidor. Verifique se o backend está rodando na porta 3000.');
+        } else if (error.code === 'ERR_NETWORK') {
+          setErro('Erro de rede. Verifique sua conexão com a internet e se o backend está rodando.');
+        } else if (error.response?.status === 404) {
+          setErro('Endpoint não encontrado. Verifique se o backend está atualizado.');
+        } else {
+          setErro(error.response?.data?.message || 'Erro ao carregar restaurantes. Verifique se o backend está rodando.');
+        }
+        
+        setRestaurantes([]);
       }
 
       // Verificar se tem ticket ativo no localStorage
@@ -45,8 +70,8 @@ export default function RestaurantesDisponiveis() {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      setRestaurantes(restaurantesMockados);
+      console.error('❌ Erro geral ao carregar dados:', error);
+      setErro('Erro ao carregar dados.');
     } finally {
       setLoading(false);
     }
@@ -172,6 +197,23 @@ export default function RestaurantesDisponiveis() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* Banner de Erro */}
+        {erro && !loading && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">Erro ao carregar restaurantes</h3>
+              <p className="text-sm text-red-700 mt-1">{erro}</p>
+              <button
+                onClick={carregarDados}
+                className="mt-3 text-sm font-medium text-red-600 hover:text-red-700 underline"
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Banner de Ticket Ativo */}
         {ticketAtivo && (
           <div className="mb-6 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
@@ -303,7 +345,7 @@ export default function RestaurantesDisponiveis() {
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-medium text-gray-900">Valor Fast Lane</p>
                     <p className="text-lg font-bold text-orange-600">
-                      R$ {restauranteSelecionado.precoFastlane?.toFixed(2) || '15,00'}
+                      R$ {Number(restauranteSelecionado.precoFastlane || restauranteSelecionado.precoFastLane || 15).toFixed(2)}
                     </p>
                   </div>
                   <p className="text-xs text-gray-600">
@@ -345,61 +387,6 @@ export default function RestaurantesDisponiveis() {
   );
 }
 
-// Dados mockados de restaurantes (simulando resposta do backend)
-const restaurantesMockados = [
-  {
-    id: '1',
-    nome: 'Trattoria Bella Vista',
-    slug: 'trattoria-bella-vista',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    telefone: '5511987654321',
-    endereco: 'Rua das Flores, 123 - Centro',
-    precoFastlane: 15.00,
-    mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado e aproveite nosso ambiente aconchegante.',
-    imagem: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-    filaAtiva: {
-      id: 'fila-1',
-      tamanhoFila: 8,
-      tempoEstimadoMinutos: 25
-    }
-  },
-  {
-    id: '2',
-    nome: 'Sushi Master',
-    slug: 'sushi-master',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    telefone: '5511987654322',
-    endereco: 'Av. Paulista, 1000 - Bela Vista',
-    precoFastlane: 20.00,
-    mensagemBoasVindas: 'Seja bem-vindo ao Sushi Master! Prepare-se para uma experiência única da culinária japonesa.',
-    imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80',
-    filaAtiva: {
-      id: 'fila-2',
-      tamanhoFila: 5,
-      tempoEstimadoMinutos: 15
-    }
-  },
-  {
-    id: '3',
-    nome: 'La Parrilla Argentina',
-    slug: 'la-parrilla-argentina',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    telefone: '5511987654323',
-    endereco: 'Rua Augusta, 500 - Consolação',
-    precoFastlane: 18.00,
-    mensagemBoasVindas: '¡Bienvenido a La Parrilla! Aguarde ser chamado para desfrutar das melhores carnes argentinas.',
-    imagem: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
-    filaAtiva: {
-      id: 'fila-3',
-      tamanhoFila: 12,
-      tempoEstimadoMinutos: 35
-    }
-  }
-];
-
 // Função para formatar tempo estimado
 function formatarTempoEstimado(minutos) {
   if (!minutos) return 'Não disponível';
@@ -411,9 +398,41 @@ function formatarTempoEstimado(minutos) {
 
 // Componente do Card de Restaurante
 function RestauranteCard({ restaurante, onEntrarFila }) {
-  const filaAtiva = restaurante.filaAtiva || {};
-  const tamanhoFila = filaAtiva.tamanhoFila || 0;
-  const tempoEstimado = filaAtiva.tempoEstimadoMinutos || 0;
+  // Backend retorna array de filas, precisamos pegar a primeira ou somar todas
+  const filas = restaurante.filas || [];
+  const filaAtiva = restaurante.filaAtiva || restaurante.fila || filas[0] || {};
+  
+  // Calcular total de pessoas na fila (soma de todas as filas se houver múltiplas)
+  let tamanhoFila = 0;
+  if (filas.length > 0) {
+    tamanhoFila = filas.reduce((total, fila) => {
+      const count = fila._aggr_count_tickets || fila._count?.tickets || fila.tamanhoFila || 0;
+      return total + count;
+    }, 0);
+  } else {
+    // Fallback para estrutura antiga
+    tamanhoFila = filaAtiva.tamanhoFila || filaAtiva._count?.tickets || filaAtiva._aggr_count_tickets || filaAtiva.ticketsAtivos || 0;
+  }
+  
+  const tempoEstimado = Number(filaAtiva.tempoEstimadoMinutos || filaAtiva.tempoMedioEspera || 0);
+  
+  // Log para debug
+  console.log('Renderizando restaurante:', {
+    nome: restaurante.nome,
+    filas: filas.length,
+    tamanhoFila,
+    tempoEstimado,
+    precos: {
+      precoFastlane: restaurante.precoFastlane,
+      precoFastLane: restaurante.precoFastLane,
+      tipo: typeof restaurante.precoFastlane
+    },
+    estrutura: {
+      temFilas: !!restaurante.filas,
+      temFilaAtiva: !!restaurante.filaAtiva,
+      temFila: !!restaurante.fila
+    }
+  });
   
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
@@ -427,7 +446,7 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
-            <div className="text-white text-center">
+            <div className="text-white text-center px-4">
               <h3 className="text-xl font-bold">{restaurante.nome}</h3>
             </div>
           </div>
@@ -442,10 +461,12 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
 
       {/* Informações */}
       <div className="p-4">
-        {/* Localização */}
-        <div className="mb-3 text-sm text-gray-600">
-          <p className="mb-2 line-clamp-1">{restaurante.endereco}</p>
-        </div>
+        {/* Localização - só mostra se tiver endereço */}
+        {restaurante.endereco && (
+          <div className="mb-3 text-sm text-gray-600">
+            <p className="mb-2 line-clamp-1">{restaurante.endereco}</p>
+          </div>
+        )}
 
         {/* Informações da Fila */}
         <div className="mb-4 flex items-center gap-4 text-sm">

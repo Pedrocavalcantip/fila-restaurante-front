@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { restauranteService } from '../services/api';
 
 function GerenciamentoFilas() {
   const navigate = useNavigate();
@@ -14,28 +15,13 @@ function GerenciamentoFilas() {
 
   const carregarDados = async () => {
     try {
-      // TODO: Integrar com API GET /restaurantes/meu-restaurante
-      // A fila padrão é criada automaticamente no cadastro
-      const mockRestaurante = {
-        id: 'rest-123',
-        nome: 'Trattoria Bella Vista',
-        slug: 'trattoria-bella-vista',
-        precoFastlane: 15.00,
-        maxReentradasPorDia: 3,
-        tempoMedioAtendimento: 15,
-        status: 'ATIVO',
-        filas: [
-          {
-            id: 'fila-123',
-            nome: 'Fila Principal',
-            status: 'ATIVA',
-            ticketsAtivos: 12,
-            tempoMedioEspera: 20
-          }
-        ]
-      };
+      // Buscar dados do restaurante do backend
+      const response = await restauranteService.buscarMeuRestaurante();
+      const rest = response.restaurante || response;
       
-      setRestaurante(mockRestaurante);
+      console.log('✅ Dados do restaurante carregados:', rest);
+      
+      setRestaurante(rest);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {

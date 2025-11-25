@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Crown, TrendingUp, UserX, Edit2, History } from 'lucide-react';
+import { clienteService } from '../services/api';
 
 export default function PerfilCliente() {
   const [cliente, setCliente] = useState(null);
@@ -19,43 +20,25 @@ export default function PerfilCliente() {
     carregarPerfil();
   }, []);
 
-  const carregarPerfil = () => {
-    // Buscar dados do localStorage
-    const clienteStorage = localStorage.getItem('cliente');
-    if (clienteStorage) {
-      const clienteData = JSON.parse(clienteStorage);
+  const carregarPerfil = async () => {
+    try {
+      // Buscar perfil do backend
+      const response = await clienteService.buscarPerfil();
+      const clienteData = response.cliente || response;
+      
+      console.log('✅ Perfil carregado:', clienteData);
+      
       setCliente(clienteData);
       setFormData({
-        nome: clienteData.nome || 'Maria Silva',
-        email: clienteData.email || 'maria.silva@email.com',
-        telefone: clienteData.telefone || '(11) 98765-4321',
-        cpf: clienteData.cpf || '000.000.000-00',
-        cidade: clienteData.cidade || 'São Paulo',
+        nome: clienteData.nomeCompleto || clienteData.nome || '',
+        email: clienteData.email || '',
+        telefone: clienteData.telefone || '',
+        cpf: clienteData.cpf || '',
+        cidade: clienteData.cidade || '',
         estado: clienteData.estado || 'SP'
       });
-    } else {
-      // Dados mockados - só para desenvolvimento
-      const mockCliente = {
-        nome: 'Maria Silva',
-        email: 'maria.silva@email.com',
-        telefone: '(11) 98765-4321',
-        cpf: '123.456.789-00',
-        cidade: 'São Paulo',
-        estado: 'SP',
-        status: 'ATIVO',
-        totalVisitas: 24,
-        totalFastLane: 8,
-        totalNoShows: 0
-      };
-      setCliente(mockCliente);
-      setFormData({
-        nome: mockCliente.nome,
-        email: mockCliente.email,
-        telefone: mockCliente.telefone,
-        cpf: mockCliente.cpf,
-        cidade: mockCliente.cidade,
-        estado: mockCliente.estado
-      });
+    } catch (error) {
+      console.error('❌ Erro ao carregar perfil:', error);
     }
   };
 
@@ -67,15 +50,30 @@ export default function PerfilCliente() {
     }));
   };
 
-  const handleSalvar = () => {
-    // Atualizar localStorage
-    const clienteAtualizado = {
-      ...cliente,
-      ...formData
-    };
-    localStorage.setItem('cliente', JSON.stringify(clienteAtualizado));
-    setCliente(clienteAtualizado);
-    setEditando(false);
+  const handleSalvar = async () => {
+    try {
+      // Atualizar perfil no backend
+      const payload = {
+        nomeCompleto: formData.nome,
+        telefone: formData.telefone,
+        cidade: formData.cidade,
+        estado: formData.estado
+      };
+      
+      console.log('➡️ Atualizando perfil:', payload);
+      
+      await clienteService.atualizarPerfil(payload);
+      
+      console.log('✅ Perfil atualizado com sucesso');
+      
+      // Recarregar perfil
+      await carregarPerfil();
+      setEditando(false);
+      alert('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar perfil:', error);
+      alert('Erro ao atualizar perfil. Tente novamente.');
+    }
   };
 
   const handleCancelar = () => {

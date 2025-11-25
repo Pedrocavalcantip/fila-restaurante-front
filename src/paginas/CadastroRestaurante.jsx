@@ -99,29 +99,64 @@ export default function CadastroRestaurante() {
     setLoading(true);
 
     try {
+      // Validações básicas
+      if (!formData.nome.trim()) {
+        setErro('Nome do restaurante é obrigatório');
+        setLoading(false);
+        return;
+      }
+      if (!formData.emailAdmin.trim()) {
+        setErro('Email do administrador é obrigatório');
+        setLoading(false);
+        return;
+      }
+      if (!formData.senhaAdmin || formData.senhaAdmin.length < 8) {
+        setErro('Senha deve ter no mínimo 8 caracteres');
+        setLoading(false);
+        return;
+      }
+      if (!formData.cidade.trim() || !formData.estado) {
+        setErro('Cidade e estado são obrigatórios');
+        setLoading(false);
+        return;
+      }
+
       // Preparar payload para o backend
       const payload = {
-        nome: formData.nome,
-        slug: formData.slug,
-        emailAdmin: formData.emailAdmin,
+        nome: formData.nome.trim(),
+        slug: formData.slug.trim(),
+        emailAdmin: formData.emailAdmin.trim(),
         senhaAdmin: formData.senhaAdmin,
-        precoFastlane: Number(formData.precoFastlane),
-        precoVip: 50, // Backend exige valor positivo (VIP não usado no front)
+        precoFastLane: Number(formData.precoFastlane), // Backend usa 'precoFastLane' com L maiúsculo
+        precoVip: Number(formData.precoFastlane), // Usar mesmo valor do FastLane
         maxReentradasPorDia: Number(formData.maxReentradasPorDia),
+        cnpj: formData.cnpj.replace(/\D/g, ''),
+        telefone: formData.telefone.replace(/\D/g, ''),
+        cidade: formData.cidade.trim(),
+        estado: formData.estado,
         endereco: {
           cep: formData.cep.replace(/\D/g, ''),
-          rua: formData.rua,
-          numero: formData.numero,
-          bairro: formData.bairro,
-          cidade: formData.cidade,
+          rua: formData.rua.trim(),
+          numero: formData.numero.trim(),
+          bairro: formData.bairro.trim(),
+          cidade: formData.cidade.trim(),
           estado: formData.estado,
           complemento: ''
-        },
-        cnpj: formData.cnpj.replace(/\D/g, ''),
-        telefone: formData.telefone.replace(/\D/g, '')
+        }
       };
 
-      console.log('➡️ Payload de cadastro:', payload);
+      console.log('➡️ Payload COMPLETO de cadastro:', JSON.stringify(payload, null, 2));
+      console.log('📋 Validações:');
+      console.log('  - Nome:', payload.nome);
+      console.log('  - Slug:', payload.slug);
+      console.log('  - Email:', payload.emailAdmin);
+      console.log('  - Preço FastLane (formData):', formData.precoFastlane, '(tipo:', typeof formData.precoFastlane + ')');
+      console.log('  - Preço FastLane (payload):', payload.precoFastLane, '(tipo:', typeof payload.precoFastLane + ')');
+      console.log('  - Preço VIP (payload):', payload.precoVip, '(tipo:', typeof payload.precoVip + ')');
+      console.log('  - CNPJ:', payload.cnpj);
+      console.log('  - Telefone:', payload.telefone);
+      console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
+      console.log('  - Endereço completo:', payload.endereco);
 
       // Chamar API
       const response = await restauranteService.cadastrar(payload);
@@ -137,12 +172,19 @@ export default function CadastroRestaurante() {
       
     } catch (error) {
       console.error('❌ Erro ao cadastrar restaurante:', error);
+      console.error('❌ Response completo:', error.response);
+      console.error('❌ Status:', error.response?.status);
+      console.error('❌ Data:', error.response?.data);
+      console.error('❌ Headers:', error.response?.headers);
       
       // Extrair mensagem de erro do backend
       let mensagem = 'Erro ao cadastrar restaurante. Tente novamente.';
       
       if (error.response?.data) {
         const data = error.response.data;
+        console.log('📋 Tipo de erro:', typeof data);
+        console.log('📋 Conteúdo do erro:', data);
+        
         if (typeof data === 'string') {
           mensagem = data;
         } else if (data.message) {
@@ -151,6 +193,11 @@ export default function CadastroRestaurante() {
           mensagem = data.erro;
         } else if (data.error) {
           mensagem = data.error;
+        } else if (data.errors) {
+          // Se houver array de erros, mostrar todos
+          mensagem = Array.isArray(data.errors) 
+            ? data.errors.join(', ') 
+            : JSON.stringify(data.errors);
         }
       }
       
@@ -518,10 +565,6 @@ export default function CadastroRestaurante() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
                   <span>Sistema Fast-Lane para gerar receita adicional</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Analíticos e relatórios de desempenho</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />

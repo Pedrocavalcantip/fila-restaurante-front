@@ -232,7 +232,7 @@ export default function HistoricoClienteTickets() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-bold text-gray-900">
-                        {ticket.restaurante.nomeFantasia}
+                        {ticket.restaurante?.nome || 'Restaurante'}
                       </h3>
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(ticket.status)}`}>
                         {getStatusIcon(ticket.status)}
@@ -240,7 +240,7 @@ export default function HistoricoClienteTickets() {
                          ticket.status === 'CANCELADO' ? 'Cancelado' : 'No-Show'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">{ticket.restaurante.cidade}</p>
+                    <p className="text-sm text-gray-600">{ticket.restaurante?.cidade || ''}</p>
                   </div>
 
                   <div className="text-right">

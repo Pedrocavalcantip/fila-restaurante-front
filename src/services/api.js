@@ -92,6 +92,14 @@ export const clienteService = {
   },
 
   /**
+   * Buscar histórico de tickets do cliente
+   */
+  buscarHistoricoTickets: async () => {
+    const response = await api.get('/cliente/tickets/historico');
+    return response.data;
+  },
+
+  /**
    * Buscar meu ticket ativo
    */
   buscarMeuTicket: async () => {
