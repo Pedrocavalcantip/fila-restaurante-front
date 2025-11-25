@@ -28,10 +28,18 @@ function Gerenciamento() {
     telefone: '',
     endereco: '',
     capacidade: 50,
-    tempoMedioAtendimentoMinutos: 45,
     precoFastlane: 15.00,
     maxReentradasPorDia: 3,
     mensagemBoasVindas: '',
+    horarios: {
+      segunda: { aberto: true, inicio: '11:00', fim: '23:00' },
+      terca: { aberto: true, inicio: '11:00', fim: '23:00' },
+      quarta: { aberto: true, inicio: '11:00', fim: '23:00' },
+      quinta: { aberto: true, inicio: '11:00', fim: '23:00' },
+      sexta: { aberto: true, inicio: '11:00', fim: '23:00' },
+      sabado: { aberto: true, inicio: '11:00', fim: '23:00' },
+      domingo: { aberto: false, inicio: '11:00', fim: '23:00' }
+    }
   });
 
   useEffect(() => {
@@ -43,23 +51,50 @@ function Gerenciamento() {
       const response = await restauranteService.buscarMeuRestaurante();
       const rest = response.restaurante || response;
       
+      console.log('✅ Dados do restaurante carregados:', rest);
+      
+      // Parsear horários se existirem (backend pode retornar JSON string)
+      let horariosParsed = {
+        segunda: { aberto: true, inicio: '11:00', fim: '23:00' },
+        terca: { aberto: true, inicio: '11:00', fim: '23:00' },
+        quarta: { aberto: true, inicio: '11:00', fim: '23:00' },
+        quinta: { aberto: true, inicio: '11:00', fim: '23:00' },
+        sexta: { aberto: true, inicio: '11:00', fim: '23:00' },
+        sabado: { aberto: true, inicio: '11:00', fim: '23:00' },
+        domingo: { aberto: false, inicio: '11:00', fim: '23:00' }
+      };
+      
+      if (rest.horariosFuncionamento) {
+        try {
+          horariosParsed = typeof rest.horariosFuncionamento === 'string' 
+            ? JSON.parse(rest.horariosFuncionamento)
+            : rest.horariosFuncionamento;
+        } catch (e) {
+          console.warn('Erro ao parsear horários:', e);
+        }
+      }
+      
+      // Montar endereço completo do objeto aninhado
+      const enderecoCompleto = rest.endereco 
+        ? `${rest.endereco.rua || ''}, ${rest.endereco.numero || ''} - ${rest.endereco.bairro || ''}, ${rest.endereco.cidade || ''}/${rest.endereco.estado || ''}`
+        : '';
+      
       setConfiguracoes({
         nome: rest.nome || '',
         slug: rest.slug || '',
         telefone: rest.telefone || '',
-        endereco: `${rest.endereco || ''}, ${rest.numero || ''} - ${rest.cidade || ''}` || '',
-        capacidade: rest.capacidade || 50,
-        tempoMedioAtendimentoMinutos: rest.tempoMedioAtendimento || 45,
+        endereco: enderecoCompleto,
+        capacidade: rest.maxTicketsPorHora || 50, // Backend usa maxTicketsPorHora
         precoFastlane: rest.precoFastLane || 15.00,
         maxReentradasPorDia: rest.maxReentradasPorDia || 3,
         mensagemBoasVindas: rest.mensagemBoasVindas || '',
+        horarios: horariosParsed
       });
       
       // TODO: Carregar membros da equipe quando endpoint estiver disponível
       // setMembrosEquipe(rest.equipe || []);
-      console.log('✅ Dados do restaurante carregados:', rest);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      console.error('❌ Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
@@ -94,20 +129,32 @@ function Gerenciamento() {
   const handleSalvarConfiguracoes = async (e) => {
     e.preventDefault();
     try {
-      await restauranteService.atualizarRestaurante({
+      const payload = {
         nome: configuracoes.nome,
         telefone: configuracoes.telefone,
-        capacidade: configuracoes.capacidade,
-        tempoMedioAtendimento: configuracoes.tempoMedioAtendimentoMinutos,
+        maxTicketsPorHora: configuracoes.capacidade, // Frontend usa 'capacidade', backend usa 'maxTicketsPorHora'
         precoFastLane: configuracoes.precoFastlane,
         maxReentradasPorDia: configuracoes.maxReentradasPorDia,
         mensagemBoasVindas: configuracoes.mensagemBoasVindas,
-      });
-      console.log('✅ Configurações salvas');
+        horariosFuncionamento: configuracoes.horarios // Envia objeto de horários
+      };
+      
+      console.log('➡️ Salvando configurações:', payload);
+      
+      await restauranteService.atualizarRestaurante(payload);
+      
+      console.log('✅ Configurações salvas com sucesso');
       alert('Configurações salvas com sucesso!');
     } catch (error) {
-      console.error('Erro ao salvar configurações:', error);
-      alert('Erro ao salvar configurações. Tente novamente.');
+      console.error('❌ Erro ao salvar configurações:', error);
+      
+      // Extrair mensagem de erro
+      let mensagem = 'Erro ao salvar configurações. Tente novamente.';
+      if (error.response?.data?.message) {
+        mensagem = error.response.data.message;
+      }
+      
+      alert(mensagem);
     }
   };
 
@@ -337,16 +384,6 @@ function Gerenciamento() {
                 Configurações de Fila
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Tempo Médio de Atendimento (min)</label>
-                  <input
-                    type="number"
-                    value={configuracoes.tempoMedioAtendimentoMinutos}
-                    onChange={(e) => setConfiguracoes({...configuracoes, tempoMedioAtendimentoMinutos: parseInt(e.target.value)})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    placeholder="45"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">Máx. Reentradas por Dia</label>
                   <input

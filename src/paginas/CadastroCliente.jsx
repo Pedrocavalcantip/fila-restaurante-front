@@ -34,15 +34,19 @@ export default function CadastroCliente() {
 
     try {
       // Integração com backend
-      const response = await clienteService.cadastrar({
-        nome: formData.nome,
+      const payload = {
+        nomeCompleto: formData.nome, // Backend espera 'nomeCompleto'
         email: formData.email,
         telefone: formData.telefone,
         senha: formData.senha,
         cpf: formData.cpf,
         cidade: formData.cidade,
         estado: formData.estado
-      });
+      };
+      
+      console.log('➡️ Payload de cadastro cliente:', payload);
+      
+      const response = await clienteService.cadastrar(payload);
       const { token, cliente } = response;
       localStorage.setItem('token', token);
       localStorage.setItem('clienteLogado', JSON.stringify(cliente));
