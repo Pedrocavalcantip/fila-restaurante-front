@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ticketService } from '../services/api';
 
 function PainelOperador() {
   const navigate = useNavigate();
@@ -36,76 +37,19 @@ function PainelOperador() {
   const carregarFila = async () => {
     setLoading(true);
     try {
-      // Tenta carregar do localStorage primeiro
-      const ticketsSalvos = localStorage.getItem('painelOperadorTickets');
-      const estatisticasSalvas = localStorage.getItem('painelOperadorEstatisticas');
-      const filaSalva = localStorage.getItem('painelOperadorFila');
-
-      if (ticketsSalvos && estatisticasSalvas && filaSalva) {
-        setTickets(JSON.parse(ticketsSalvos));
-        setEstatisticas(JSON.parse(estatisticasSalvas));
-        setFilaData(JSON.parse(filaSalva));
-      } else {
-        // Mock inicial
-        const mockData = {
-          fila: {
-            id: 'fila-123',
-            nome: 'Fila Principal',
-            restauranteId: 'rest-123'
-          },
-          tickets: [
-            {
-              id: 'ticket-1',
-              numero: 'A-023',
-              nomeCliente: 'João Silva',
-              telefone: '11987654321',
-              quantidadePessoas: 2,
-              prioridade: 'NORMAL',
-              status: 'AGUARDANDO',
-              posicao: 1,
-              tempoEstimadoMinutos: 5,
-              criadoEm: new Date(Date.now() - 5 * 60000).toISOString(),
-              observacoes: 'Cadeira de bebê'
-            },
-            {
-              id: 'ticket-2',
-              numero: 'A-024',
-              nomeCliente: 'Maria Santos',
-              telefone: '11987651234',
-              quantidadePessoas: 4,
-              prioridade: 'FAST_LANE',
-              status: 'AGUARDANDO',
-              posicao: 2,
-              tempoEstimadoMinutos: 3,
-              criadoEm: new Date(Date.now() - 3 * 60000).toISOString()
-            },
-            {
-              id: 'ticket-3',
-              numero: 'A-025',
-              nomeCliente: 'Carlos Oliveira',
-              telefone: '11987655678',
-              quantidadePessoas: 2,
-              prioridade: 'NORMAL',
-              status: 'CHAMADO',
-              posicao: 3,
-              tempoEstimadoMinutos: 0,
-              chamadasCount: 1,
-              criadoEm: new Date(Date.now() - 12 * 60000).toISOString()
-            }
-          ],
-          estatisticas: {
-            totalAguardando: 2,
-            totalChamados: 1
-          }
-        };
-        setFilaData(mockData.fila);
-        setTickets(mockData.tickets);
-        setEstatisticas(mockData.estatisticas);
-        // Salva no localStorage para persistir alterações
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(mockData.tickets));
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(mockData.estatisticas));
-        localStorage.setItem('painelOperadorFila', JSON.stringify(mockData.fila));
+      // Integração com backend
+      const filaId = localStorage.getItem('filaAtivaId');
+      if (!filaId) {
+        console.error('❌ ERRO: filaId não encontrado no localStorage');
+        console.log('💡 Certifique-se de que o login salvou o filaId');
+        return;
       }
+      console.log('🔍 Carregando fila:', filaId);
+      const response = await ticketService.listarFilaAtiva(filaId);
+      setFilaData(response.fila);
+      setTickets(response.tickets || []);
+      setEstatisticas(response.estatisticas);
+      console.log('✅ Fila carregada:', response);
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
     } finally {
@@ -115,34 +59,15 @@ function PainelOperador() {
 
   const atualizarFila = async () => {
     setAtualizando(true);
-    // TODO: Quando integrar com backend, fazer GET /tickets/filas/{filaId}/tickets/ativa
-    // Por enquanto, apenas recarrega do localStorage
     await carregarFila();
     setAtualizando(false);
   };
 
   const chamarCliente = async (ticketId) => {
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/chamar
-      // Muda status AGUARDANDO -> CHAMADO, emite WebSocket
-      console.log('🔔 Chamando cliente:', ticketId);
-      setTickets(prevTickets => {
-        const novos = prevTickets.map(ticket =>
-          ticket.id === ticketId
-            ? { ...ticket, status: 'CHAMADO', chamadasCount: 1 }
-            : ticket
-        );
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        return novos;
-      });
-      setEstatisticas(prev => {
-        const novo = {
-          totalAguardando: prev.totalAguardando - 1,
-          totalChamados: prev.totalChamados + 1
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
+      await ticketService.chamarCliente(ticketId);
+      console.log('✅ Cliente chamado');
+      await carregarFila();
     } catch (error) {
       console.error('Erro ao chamar cliente:', error);
     }
@@ -150,20 +75,9 @@ function PainelOperador() {
 
   const rechamarCliente = async (ticketId) => {
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/rechamar
-      // Incrementa contagemRechamada, mantém status CHAMADO
-      console.log('🔁 Rechamando cliente:', ticketId);
-      
-      // Mock: Incrementar contador de chamadas
-      setTickets(prevTickets => {
-        const novos = prevTickets.map(ticket => 
-          ticket.id === ticketId 
-            ? { ...ticket, chamadasCount: (ticket.chamadasCount || 0) + 1 }
-            : ticket
-        );
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        return novos;
-      });
+      await ticketService.rechamarCliente(ticketId);
+      console.log('✅ Cliente rechamado');
+      await carregarFila();
     } catch (error) {
       console.error('Erro ao rechamar cliente:', error);
     }
@@ -171,28 +85,9 @@ function PainelOperador() {
 
   const finalizarAtendimento = async (ticketId) => {
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/finalizar
-      // Muda status para FINALIZADO
-      console.log('✅ Finalizando atendimento:', ticketId);
-      
-      // Mock: Remover ticket da lista (foi finalizado)
-      setTickets(prevTickets => {
-        const novos = prevTickets.filter(ticket => ticket.id !== ticketId);
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        return novos;
-      });
-      
-      // Atualizar estatísticas
-      setEstatisticas(prev => {
-        const novo = {
-          ...prev,
-          totalChamados: prev.totalChamados - 1
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
-      
-      // Fechar modal se estiver aberto
+      await ticketService.finalizarAtendimento(ticketId);
+      console.log('✅ Atendimento finalizado');
+      await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
     } catch (error) {
@@ -202,28 +97,9 @@ function PainelOperador() {
 
   const pularVez = async (ticketId) => {
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/pular
-      // Retorna ticket para o fim da fila (CHAMADO -> AGUARDANDO)
-      console.log('⏭️ Pulando vez:', ticketId);
-      
-      // Mock: Voltar para AGUARDANDO no fim da fila
-      setTickets(prevTickets => {
-        const ticket = prevTickets.find(t => t.id === ticketId);
-        const outros = prevTickets.filter(t => t.id !== ticketId);
-        const novos = [...outros, { ...ticket, status: 'AGUARDANDO' }];
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        return novos;
-      });
-      
-      // Atualizar estatísticas
-      setEstatisticas(prev => {
-        const novo = {
-          totalAguardando: prev.totalAguardando + 1,
-          totalChamados: prev.totalChamados - 1
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
+      await ticketService.pularCliente(ticketId);
+      console.log('✅ Vez pulada');
+      await carregarFila();
     } catch (error) {
       console.error('Erro ao pular vez:', error);
     }
@@ -233,28 +109,9 @@ function PainelOperador() {
     if (!window.confirm('Confirmar que o cliente não apareceu?')) return;
     
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/no-show
-      // Status NO_SHOW, incrementa estatística do cliente
-      console.log('❌ Marcando no-show:', ticketId);
-      
-      // Mock: Remover ticket da lista (no-show)
-      setTickets(prevTickets => {
-        const novos = prevTickets.filter(ticket => ticket.id !== ticketId);
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        return novos;
-      });
-      
-      // Atualizar estatísticas
-      setEstatisticas(prev => {
-        const novo = {
-          ...prev,
-          totalChamados: prev.totalChamados - 1
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
-      
-      // Fechar modal se estiver aberto
+      await ticketService.marcarNoShow(ticketId);
+      console.log('✅ No-show registrado');
+      await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
     } catch (error) {
@@ -274,33 +131,9 @@ function PainelOperador() {
     }
 
     try {
-      // TODO: Integrar com API POST /tickets/{ticketId}/cancelar
-      // Body: { motivo }, Status CANCELADO
-      console.log('🚫 Cancelando ticket:', ticketParaCancelar, 'Motivo:', motivoCancelamento);
-      
-      const ticket = tickets.find(t => t.id === ticketParaCancelar);
-      
-      // Mock: Remover ticket da lista (cancelado)
-      setTickets(prevTickets => {
-        console.log('📊 Tickets ANTES de cancelar:', prevTickets.length);
-        const novos = prevTickets.filter(t => t.id !== ticketParaCancelar);
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        console.log('📊 Tickets DEPOIS de cancelar:', novos.length);
-        console.log('💾 Salvou no localStorage:', novos);
-        return novos;
-      });
-      
-      // Atualizar estatísticas
-      setEstatisticas(prev => {
-        const novo = {
-          totalAguardando: ticket?.status === 'AGUARDANDO' ? prev.totalAguardando - 1 : prev.totalAguardando,
-          totalChamados: ticket?.status === 'CHAMADO' ? prev.totalChamados - 1 : prev.totalChamados
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
-      
-      // Fechar modals
+      await ticketService.cancelarTicket(ticketParaCancelar, motivoCancelamento);
+      console.log('✅ Ticket cancelado');
+      await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
       setModalCancelarAberto(false);
@@ -318,42 +151,21 @@ function PainelOperador() {
     }
 
     try {
-      // TODO: Integrar com API POST /tickets/filas/{filaId}/tickets
-      // Body: { nomeCliente, telefone, quantidadePessoas, observacoes }
-      console.log('➕ Adicionando cliente presencial:', novoCliente);
+      const filaId = localStorage.getItem('filaAtivaId');
+      if (!filaId) {
+        console.error('❌ ERRO: filaId não encontrado');
+        return;
+      }
       
-      // Mock: Gerar novo ticket
-      const novoTicket = {
-        id: `ticket-${Date.now()}`,
-        numero: `A-${String(tickets.length + 1).padStart(3, '0')}`,
-        ...novoCliente,
-        prioridade: 'NORMAL',
-        status: 'AGUARDANDO',
-        posicao: tickets.filter(t => t.status === 'AGUARDANDO').length + 1,
-        tempoEstimadoMinutos: (tickets.filter(t => t.status === 'AGUARDANDO').length + 1) * 5,
-        criadoEm: new Date().toISOString(),
-        chamadasCount: 0
-      };
-      
-      // Adicionar à lista
-      setTickets(prevTickets => {
-        console.log('📊 Tickets ANTES de adicionar:', prevTickets.length);
-        const novos = [...prevTickets, novoTicket];
-        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
-        console.log('📊 Tickets DEPOIS de adicionar:', novos.length);
-        console.log('💾 Salvou no localStorage:', novos);
-        return novos;
+      await ticketService.criarTicketLocal(filaId, {
+        nomeCliente: novoCliente.nomeCliente,
+        telefone: novoCliente.telefone,
+        quantidadePessoas: novoCliente.quantidadePessoas,
+        observacoes: novoCliente.observacoes
       });
       
-      // Atualizar estatísticas
-      setEstatisticas(prev => {
-        const novo = {
-          ...prev,
-          totalAguardando: prev.totalAguardando + 1
-        };
-        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
-        return novo;
-      });
+      console.log('✅ Cliente presencial adicionado');
+      await carregarFila();
       
       // Limpar form e fechar modal
       setNovoCliente({
@@ -404,17 +216,27 @@ function PainelOperador() {
   };
 
   const handleVoltar = () => {
-    // Verificar role do usuário logado
-    const operadorLogado = JSON.parse(localStorage.getItem('operadorLogado') || '{}');
-    const role = operadorLogado.role;
-
-    // ADMIN tem acesso ao Painel Administrativo
-    // OPERADOR volta para a tela de login
-    if (role === 'ADMIN') {
-      navigate('/restaurante/painel');
+    // Verificar role do usuário logado (prioriza userRole do localStorage)
+    const userRole = localStorage.getItem('userRole');
+    
+    if (!userRole) {
+      // Fallback: tentar extrair do operadorLogado
+      const operadorLogado = JSON.parse(localStorage.getItem('operadorLogado') || '{}');
+      const role = (operadorLogado.role || operadorLogado.papel)?.toUpperCase();
+      
+      if (role === 'ADMIN') {
+        navigate('/restaurante/painel');
+      } else {
+        navigate('/restaurante/login');
+      }
     } else {
-      // Operador volta para login
-      navigate('/restaurante/login');
+      // ADMIN tem acesso ao Painel Administrativo
+      // OPERADOR volta para a tela de login
+      if (userRole === 'ADMIN') {
+        navigate('/restaurante/painel');
+      } else {
+        navigate('/restaurante/login');
+      }
     }
   };
 

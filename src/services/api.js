@@ -2,12 +2,14 @@ import axios from 'axios';
 
 // Cria a instância do Axios apontando para a sua API
 const api = axios.create({
-  // Ajuste a porta conforme seu backend
-  baseURL: 'http://localhost:3000/api/v1',
+  // Em desenvolvimento usamos proxy do Vite — aponta para /api/v1
+  // Em produção, ajuste para o URL real do backend (ex: https://api.seusite.com/api/v1)
+  baseURL: '/api/v1',
 });
 
 // Adiciona o Token automaticamente em rotas privadas
 api.interceptors.request.use((config) => {
+  // Busca token único (usado por Admin, Operador e Cliente)
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -17,35 +19,8 @@ api.interceptors.request.use((config) => {
 
 // ==========================================
 // 🏢 RESTAURANTE - Cadastro e Gestão
+// (métodos unificados mais abaixo; mantido o comentário para contexto)
 // ==========================================
-
-export const restauranteService = {
-  /**
-   * Cadastrar novo restaurante (público)
-   * @param {Object} dados - { nome, slug, cnpj, telefone, email, endereco, admin, configuracao }
-   */
-  cadastrar: async (dados) => {
-    const response = await api.post('/restaurantes/cadastro', dados);
-    return response.data;
-  },
-
-  /**
-   * Buscar dados do meu restaurante (operador logado)
-   */
-  buscarMeuRestaurante: async () => {
-    const response = await api.get('/restaurantes/meu-restaurante');
-    return response.data;
-  },
-
-  /**
-   * Atualizar meu restaurante (apenas ADMIN)
-   * @param {Object} dados - { nome, telefone, precoFastLane, precoVip }
-   */
-  atualizar: async (dados) => {
-    const response = await api.patch('/restaurantes/meu-restaurante', dados);
-    return response.data;
-  },
-};
 
 // ==========================================
 // 👤 CLIENTE - Cadastro, Login e Perfil
@@ -54,7 +29,7 @@ export const restauranteService = {
 export const clienteService = {
   /**
    * Cadastrar novo cliente
-   * @param {Object} dados - { restauranteSlug, nomeCompleto, telefone, email, senha, cidade, estado }
+   * @param {Object} dados - { nome, email, telefone, senha, cpf, cidade, estado }
    */
   cadastrar: async (dados) => {
     const response = await api.post('/auth/cliente/cadastro', dados);
@@ -63,7 +38,7 @@ export const clienteService = {
 
   /**
    * Login do cliente
-   * @param {Object} credenciais - { restauranteSlug, email, senha }
+   * @param {Object} credenciais - { email, senha }
    */
   login: async (credenciais) => {
     const response = await api.post('/auth/cliente/login', credenciais);
@@ -99,7 +74,7 @@ export const clienteService = {
   /**
    * Entrar na fila de um restaurante
    * @param {string} slug - Slug do restaurante
-   * @param {Object} dados - { tipoFila, observacoes }
+   * @param {Object} dados - { quantidadePessoas, prioridade, observacoes }
    */
   entrarNaFila: async (slug, dados) => {
     const response = await api.post(`/cliente/restaurantes/${slug}/fila/entrar`, dados);
@@ -142,7 +117,7 @@ export const clienteService = {
 export const authService = {
   /**
    * Login do operador/admin
-   * @param {Object} credenciais - { email, senha }
+   * @param {Object} credenciais - { email, senha, restauranteSlug }
    */
   login: async (credenciais) => {
     const response = await api.post('/auth/login', credenciais);
@@ -207,11 +182,30 @@ export const ticketService = {
   },
 
   /**
+   * Lista todos os tickets da fila (alias para listarFilaAtiva)
+   * @param {string} filaId
+   */
+  listarTickets: async (filaId) => {
+    const response = await api.get(`/tickets/filas/${filaId}/tickets/ativa`);
+    return response.data;
+  },
+
+  /**
    * Lista histórico com filtros opcionais
    * @param {string} filaId
    * @param {Object} [params] - { busca, status, dataInicio, dataFim, pagina, limite }
    */
   listarHistorico: async (filaId, params = {}) => {
+    const response = await api.get(`/tickets/filas/${filaId}/tickets/historico`, { params });
+    return response.data;
+  },
+
+  /**
+   * Buscar histórico (alias para listarHistorico)
+   * @param {string} filaId
+   * @param {Object} [params] - { busca, status, dataInicio, dataFim, pagina, limite }
+   */
+  buscarHistorico: async (filaId, params = {}) => {
     const response = await api.get(`/tickets/filas/${filaId}/tickets/historico`, { params });
     return response.data;
   },
@@ -266,6 +260,45 @@ export const ticketService = {
    */
   cancelarTicket: async (ticketId, motivo) => {
     const response = await api.post(`/tickets/${ticketId}/cancelar`, { motivo });
+    return response.data;
+  },
+};
+
+// ==========================================
+// 🏢 RESTAURANTE - Gestão
+// ==========================================
+
+export const restauranteService = {
+  /**
+   * Buscar dados do meu restaurante (Admin)
+   */
+  buscarMeuRestaurante: async () => {
+    const response = await api.get('/restaurantes/meu-restaurante');
+    return response.data;
+  },
+
+  /**
+   * Atualizar configurações do restaurante (Admin)
+   * @param {Object} dados - Configurações a atualizar
+   */
+  atualizarRestaurante: async (dados) => {
+    const response = await api.patch('/restaurantes/meu-restaurante', dados);
+    return response.data;
+  },
+
+  /**
+   * Alias: atualizar (compatibilidade)
+   */
+  atualizar: async (dados) => {
+    const response = await api.patch('/restaurantes/meu-restaurante', dados);
+    return response.data;
+  },
+
+  /**
+   * Cadastrar novo restaurante (público)
+   */
+  cadastrar: async (dados) => {
+    const response = await api.post('/restaurantes/cadastro', dados);
     return response.data;
   },
 };

@@ -17,44 +17,69 @@ export default function LoginRestaurante() {
     setLoading(true);
 
     try {
-      // TODO: Integrar com API POST /auth/login
-      // Body: { email, senha, restauranteSlug }
+      console.log('➡️ Payload de login:', { email, senha, restauranteSlug: slug });
+      // Integração com backend
+      const response = await authService.login({ 
+        email, 
+        senha, 
+        restauranteSlug: slug 
+      });
+      const { token, usuario } = response;
       
-      // Mock: Determinar role baseado no email
-      // admin@restaurante.com = ADMIN
-      // operador@restaurante.com = OPERADOR
-      const isAdmin = email.toLowerCase().includes('admin');
-      const role = isAdmin ? 'ADMIN' : 'OPERADOR';
-      
-      const mockToken = 'mock-token-' + Date.now();
-      const mockUsuario = {
-        id: 'user-' + Date.now(),
-        nome: isAdmin ? 'Admin Principal' : 'Operador de Caixa',
-        email: email,
-        role: role,
-        restaurante: {
-          id: 'rest-123',
-          nome: 'Trattoria Bella Vista',
-          slug: slug
-        }
-      };
-
-      localStorage.setItem('restauranteToken', mockToken);
-      localStorage.setItem('operadorLogado', JSON.stringify(mockUsuario));
+      // Salvar token e dados do usuário (usa 'token' unificado)
+      localStorage.setItem('token', token);
+      localStorage.setItem('operadorLogado', JSON.stringify(usuario));
       localStorage.setItem('restauranteSlug', slug);
-
-      console.log('✅ Login realizado com sucesso:', mockUsuario);
-      console.log('📌 Role:', role);
-
-      // Redirecionar baseado no role
-      if (role === 'ADMIN') {
-        navigate('/restaurante/painel'); // Painel Administrativo
+      
+      // CRÍTICO: Salvar filaId para o PainelOperador funcionar
+      if (usuario.restaurante?.filaAtiva?.id) {
+        localStorage.setItem('filaAtivaId', usuario.restaurante.filaAtiva.id);
+        console.log('✅ FilaId salvo:', usuario.restaurante.filaAtiva.id);
       } else {
+        console.warn('⚠️ AVISO: filaAtiva.id não encontrado na resposta do backend');
+      }
+
+      console.log('✅ Login realizado com sucesso:', usuario);
+      console.log('📌 Role:', usuario.role);
+      console.log('📌 Papel:', usuario.papel);
+      console.log('📌 Usuario completo:', JSON.stringify(usuario, null, 2));
+
+      // Redirecionar baseado no role/papel (backend usa 'papel', normaliza para maiúsculo)
+      const role = (usuario.role || usuario.papel)?.toUpperCase();
+      
+      // Salvar role no localStorage para uso futuro
+      localStorage.setItem('userRole', role);
+      
+      if (role === 'ADMIN') {
+        console.log('🔀 Redirecionando para: /restaurante/painel (Admin)');
+        navigate('/restaurante/painel'); // Painel Administrativo
+      } else if (role === 'OPERADOR') {
+        console.log('🔀 Redirecionando para: /restaurante/painel-operador (Operador)');
         navigate('/restaurante/painel-operador'); // Painel do Operador
+      } else {
+        console.warn('⚠️ Role desconhecido:', role, '- Redirecionando para painel operador');
+        navigate('/restaurante/painel-operador'); // Fallback
       }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      setErro('Credenciais inválidas ou restaurante não encontrado.');
+      // Extrair mensagem de erro do backend (sempre string)
+      let mensagem = 'Credenciais inválidas ou restaurante não encontrado.';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        // Tenta extrair a mensagem de diferentes formatos
+        if (typeof data === 'string') {
+          mensagem = data;
+        } else if (data.message) {
+          mensagem = data.message;
+        } else if (data.erro) {
+          mensagem = data.erro;
+        } else if (data.error) {
+          mensagem = data.error;
+        }
+      }
+      
+      setErro(mensagem);
     } finally {
       setLoading(false);
     }
@@ -172,17 +197,6 @@ export default function LoginRestaurante() {
           <p className="mt-5 text-center text-sm text-gray-600">
             Esqueceu a senha? Entre em contato com o administrador
           </p>
-
-          {/* Dica de Login */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-xs text-blue-800 text-center font-medium mb-1">
-              💡 Dica para testes:
-            </p>
-            <p className="text-xs text-blue-700 text-center">
-              Use <strong>admin@restaurante.com</strong> para ADMIN<br/>
-              Use <strong>operador@restaurante.com</strong> para OPERADOR
-            </p>
-          </div>
 
           {/* Separador */}
           <div className="mt-6 pt-6 border-t border-gray-200">

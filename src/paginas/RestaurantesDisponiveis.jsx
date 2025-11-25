@@ -89,38 +89,20 @@ export default function RestaurantesDisponiveis() {
     setLoadingConfirmar(true);
 
     try {
-      // Buscar dados do cliente logado
-      const clienteLogado = JSON.parse(localStorage.getItem('clienteLogado') || '{}');
-      
-      // Criar ticket com todos os dados necessários
-      const ticketMock = {
-        id: 'ticket-' + Date.now(),
-        numero: Math.floor(Math.random() * 9000) + 1000,
-        status: 'AGUARDANDO',
+      // Integração com backend
+      const response = await clienteService.entrarNaFila(restauranteSelecionado.slug, {
+        quantidadePessoas,
         prioridade: prioridadeSelecionada,
-        posicaoAtual: prioridadeSelecionada === 'FAST_LANE' ? 2 : 8,
-        quantidadePessoas: quantidadePessoas,
-        tempoEstimadoMinutos: prioridadeSelecionada === 'FAST_LANE' ? 10 : 25,
-        observacoes: observacoes,
-        nomeCliente: clienteLogado.nome || 'Cliente',
-        telefone: clienteLogado.telefone || '',
-        createdAt: new Date().toISOString(),
-        restaurante: {
-          id: restauranteSelecionado.id,
-          nome: restauranteSelecionado.nome,
-          slug: restauranteSelecionado.slug,
-          endereco: restauranteSelecionado.endereco,
-          telefone: restauranteSelecionado.telefone,
-          mensagemBoasVindas: restauranteSelecionado.mensagemBoasVindas || 'Bem-vindo! Aguarde ser chamado.'
-        }
-      };
-
-      localStorage.setItem('ticketAtivo', JSON.stringify(ticketMock));
-      console.log('✅ Ticket criado:', ticketMock);
+        observacoes
+      });
+      
+      const { ticket } = response;
+      localStorage.setItem('ticketAtivo', JSON.stringify(ticket));
+      console.log('✅ Ticket criado:', ticket);
       navigate('/cliente/meu-ticket');
     } catch (error) {
       console.error('Erro ao entrar na fila:', error);
-      setErro('Erro ao entrar na fila. Tente novamente.');
+      setErro(error.response?.data?.message || 'Erro ao entrar na fila. Tente novamente.');
     } finally {
       setLoadingConfirmar(false);
     }

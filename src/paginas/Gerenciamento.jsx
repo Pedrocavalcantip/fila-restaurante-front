@@ -1,32 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, UserPlus, Trash2, User, Settings, DollarSign, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { restauranteService } from '../services/api';
 
 function Gerenciamento() {
   const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState('equipe'); // 'equipe' ou 'configuracoes'
+  const [loading, setLoading] = useState(true);
   
-  // Dados mock da equipe
-  const [membrosEquipe, setMembrosEquipe] = useState([
-    {
-      id: 1,
-      nome: 'Carlos Silva',
-      email: 'carlos.silva@restaurant.com',
-      role: 'OPERADOR'
-    },
-    {
-      id: 2,
-      nome: 'Ana Martins',
-      email: 'ana.martins@restaurant.com',
-      role: 'OPERADOR'
-    },
-    {
-      id: 3,
-      nome: 'João Santos',
-      email: 'joao.santos@restaurant.com',
-      role: 'ADMIN'
-    }
-  ]);
+  // Dados da equipe
+  const [membrosEquipe, setMembrosEquipe] = useState([]);
 
   const [mostrarModalOperador, setMostrarModalOperador] = useState(false);
   const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
@@ -40,25 +23,47 @@ function Gerenciamento() {
 
   // Configurações do Restaurante
   const [configuracoes, setConfiguracoes] = useState({
-    nome: 'Trattoria Bella Vista',
-    slug: 'trattoria-bella-vista',
-    telefone: '11987654321',
-    endereco: 'Rua Augusta, 1234 - São Paulo',
+    nome: '',
+    slug: '',
+    telefone: '',
+    endereco: '',
     capacidade: 50,
     tempoMedioAtendimentoMinutos: 45,
     precoFastlane: 15.00,
     maxReentradasPorDia: 3,
-    mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado.',
-    horarios: {
-      segunda: { aberto: true, inicio: '11:00', fim: '23:00' },
-      terca: { aberto: true, inicio: '11:00', fim: '23:00' },
-      quarta: { aberto: true, inicio: '11:00', fim: '23:00' },
-      quinta: { aberto: true, inicio: '11:00', fim: '23:00' },
-      sexta: { aberto: true, inicio: '11:00', fim: '00:00' },
-      sabado: { aberto: true, inicio: '11:00', fim: '00:00' },
-      domingo: { aberto: true, inicio: '11:00', fim: '22:00' }
-    }
+    mensagemBoasVindas: '',
   });
+
+  useEffect(() => {
+    carregarDados();
+  }, []);
+
+  const carregarDados = async () => {
+    try {
+      const response = await restauranteService.buscarMeuRestaurante();
+      const rest = response.restaurante || response;
+      
+      setConfiguracoes({
+        nome: rest.nome || '',
+        slug: rest.slug || '',
+        telefone: rest.telefone || '',
+        endereco: `${rest.endereco || ''}, ${rest.numero || ''} - ${rest.cidade || ''}` || '',
+        capacidade: rest.capacidade || 50,
+        tempoMedioAtendimentoMinutos: rest.tempoMedioAtendimento || 45,
+        precoFastlane: rest.precoFastLane || 15.00,
+        maxReentradasPorDia: rest.maxReentradasPorDia || 3,
+        mensagemBoasVindas: rest.mensagemBoasVindas || '',
+      });
+      
+      // TODO: Carregar membros da equipe quando endpoint estiver disponível
+      // setMembrosEquipe(rest.equipe || []);
+      console.log('✅ Dados do restaurante carregados:', rest);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAdicionarMembro = (e) => {
     e.preventDefault();
@@ -86,11 +91,24 @@ function Gerenciamento() {
     setMembroParaExcluir(null);
   };
 
-  const handleSalvarConfiguracoes = (e) => {
+  const handleSalvarConfiguracoes = async (e) => {
     e.preventDefault();
-    // TODO: Integrar com API PUT /restaurantes/{restauranteId}
-    console.log('Salvando configurações:', configuracoes);
-    alert('Configurações salvas com sucesso!');
+    try {
+      await restauranteService.atualizarRestaurante({
+        nome: configuracoes.nome,
+        telefone: configuracoes.telefone,
+        capacidade: configuracoes.capacidade,
+        tempoMedioAtendimento: configuracoes.tempoMedioAtendimentoMinutos,
+        precoFastLane: configuracoes.precoFastlane,
+        maxReentradasPorDia: configuracoes.maxReentradasPorDia,
+        mensagemBoasVindas: configuracoes.mensagemBoasVindas,
+      });
+      console.log('✅ Configurações salvas');
+      alert('Configurações salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      alert('Erro ao salvar configurações. Tente novamente.');
+    }
   };
 
   const handleHorarioChange = (dia, campo, valor) => {

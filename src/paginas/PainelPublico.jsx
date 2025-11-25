@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Clock, ArrowLeft } from 'lucide-react';
+import { ticketService } from '../services/api';
 
 export default function PainelPublico() {
   const navigate = useNavigate();
@@ -28,34 +29,25 @@ export default function PainelPublico() {
 
   const carregarTicketsChamados = async () => {
     try {
-      // Simulação de dados mockados
-      const ticketsMock = [
-        {
-          id: 1,
-          numero: 1042,
-          fila: 'Jantar',
-          prioridade: 'FAST_LANE',
-          chamadoEm: new Date(Date.now() - 30000).toISOString() // 30 segundos atrás
-        },
-        {
-          id: 2,
-          numero: 1038,
-          fila: 'Almoço',
-          prioridade: 'FAST_LANE',
-          chamadoEm: new Date(Date.now() - 45000).toISOString() // 45 segundos atrás
-        },
-        {
-          id: 3,
-          numero: 1035,
-          fila: 'Jantar',
-          prioridade: 'NORMAL',
-          chamadoEm: new Date(Date.now() - 60000).toISOString() // 1 minuto atrás
-        }
-      ];
+      const filaId = localStorage.getItem('filaAtivaId');
       
-      setTicketsChamados(ticketsMock);
+      if (!filaId) {
+        console.warn('⚠️ FilaId não encontrado no localStorage');
+        return;
+      }
+
+      // Buscar tickets da fila com status CHAMADO
+      const response = await ticketService.listarTickets(filaId);
+      
+      // Filtrar apenas tickets chamados e ordenar por mais recente
+      const ticketsChamados = response
+        .filter(ticket => ticket.status === 'CHAMADO')
+        .sort((a, b) => new Date(b.chamadoEm) - new Date(a.chamadoEm))
+        .slice(0, 10); // Últimos 10 tickets chamados
+      
+      setTicketsChamados(ticketsChamados);
     } catch (error) {
-      console.error('Erro ao carregar tickets:', error);
+      console.error('❌ Erro ao carregar tickets:', error);
     }
   };
 

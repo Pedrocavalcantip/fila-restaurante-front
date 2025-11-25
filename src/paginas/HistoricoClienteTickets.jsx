@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, CheckCircle, XCircle, UserX, Filter, Calendar, TrendingUp } from 'lucide-react';
+import { clienteService } from '../services/api';
 
 export default function HistoricoClienteTickets() {
   const navigate = useNavigate();
@@ -22,45 +23,41 @@ export default function HistoricoClienteTickets() {
   const carregarHistorico = async () => {
     setLoading(true);
     try {
-      // Simulação de dados mockados
-      const ticketsMock = Array.from({ length: 25 }, (_, i) => ({
-        id: `ticket-${i + 1}`,
-        numero: 1000 + i,
-        restaurante: {
-          nomeFantasia: ['Restaurante Sabor & Arte', 'Pizzaria Italiana', 'Churrascaria Gaúcha'][Math.floor(Math.random() * 3)],
-          cidade: 'São Paulo'
-        },
-        quantidadePessoas: Math.floor(Math.random() * 6) + 1,
-        status: ['FINALIZADO', 'CANCELADO', 'NO_SHOW'][Math.floor(Math.random() * 3)],
-        prioridade: ['NORMAL', 'FAST_LANE'][Math.floor(Math.random() * 2)],
-        criadoEm: new Date(2025, 0, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
-        finalizadoEm: new Date(2025, 0, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
-        tempoEsperaMinutos: Math.floor(Math.random() * 60) + 10,
-        valorPago: Math.random() > 0.5 ? 15.00 : 0
-      }));
+      // Buscar histórico completo do cliente (todos os tickets)
+      const response = await clienteService.buscarMeuTicket();
       
-      let ticketsFiltrados = ticketsMock;
+      console.log('✅ Histórico do cliente carregado:', response);
+      
+      // Response pode ser um ticket único ou array de tickets
+      const todosTickets = Array.isArray(response) ? response : [response];
+      
+      // Filtrar por status se necessário
+      let ticketsFiltrados = todosTickets;
       if (filtroStatus !== 'TODOS') {
-        ticketsFiltrados = ticketsMock.filter(t => t.status === filtroStatus);
+        ticketsFiltrados = todosTickets.filter(t => t.status === filtroStatus);
       }
       
       // Calcular estatísticas
-      const finalizados = ticketsMock.filter(t => t.status === 'FINALIZADO').length;
-      const cancelados = ticketsMock.filter(t => t.status === 'CANCELADO').length;
-      const noShows = ticketsMock.filter(t => t.status === 'NO_SHOW').length;
-      const tempoTotal = ticketsMock.reduce((acc, t) => acc + t.tempoEsperaMinutos, 0);
+      const finalizados = todosTickets.filter(t => t.status === 'FINALIZADO').length;
+      const cancelados = todosTickets.filter(t => t.status === 'CANCELADO').length;
+      const noShows = todosTickets.filter(t => t.status === 'NO_SHOW').length;
+      
+      // Calcular tempo médio (se disponível)
+      const ticketsComTempo = todosTickets.filter(t => t.tempoEsperaMinutos);
+      const tempoTotal = ticketsComTempo.reduce((acc, t) => acc + (t.tempoEsperaMinutos || 0), 0);
+      const tempoMedio = ticketsComTempo.length > 0 ? Math.round(tempoTotal / ticketsComTempo.length) : 0;
       
       setEstatisticas({
-        totalTickets: ticketsMock.length,
+        totalTickets: todosTickets.length,
         finalizados,
         cancelados,
         noShows,
-        tempoMedioEspera: Math.round(tempoTotal / ticketsMock.length)
+        tempoMedioEspera: tempoMedio
       });
       
       setTickets(ticketsFiltrados);
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('❌ Erro ao carregar histórico:', error);
     } finally {
       setLoading(false);
     }

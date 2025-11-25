@@ -99,9 +99,34 @@ export default function CadastroRestaurante() {
     setLoading(true);
 
     try {
-      // TODO: Integrar com API POST /restaurantes/cadastro
-      // Body: { nome, slug, emailAdmin, senhaAdmin, precoFastlane, precoVip, maxReentradasPorDia, ...endereco }
-      // Response 201: { restaurante, admin, linkAcesso }
+      // Preparar payload para o backend
+      const payload = {
+        nome: formData.nome,
+        slug: formData.slug,
+        emailAdmin: formData.emailAdmin,
+        senhaAdmin: formData.senhaAdmin,
+        precoFastlane: Number(formData.precoFastlane),
+        precoVip: 50, // Backend exige valor positivo (VIP não usado no front)
+        maxReentradasPorDia: Number(formData.maxReentradasPorDia),
+        endereco: {
+          cep: formData.cep.replace(/\D/g, ''),
+          rua: formData.rua,
+          numero: formData.numero,
+          bairro: formData.bairro,
+          cidade: formData.cidade,
+          estado: formData.estado,
+          complemento: ''
+        },
+        cnpj: formData.cnpj.replace(/\D/g, ''),
+        telefone: formData.telefone.replace(/\D/g, '')
+      };
+
+      console.log('➡️ Payload de cadastro:', payload);
+
+      // Chamar API
+      const response = await restauranteService.cadastrar(payload);
+      
+      console.log('✅ Restaurante cadastrado:', response);
       
       setSucesso(true);
       
@@ -111,8 +136,25 @@ export default function CadastroRestaurante() {
       }, 3000);
       
     } catch (error) {
-      console.error('Erro ao cadastrar restaurante:', error);
-      setErro('Erro ao cadastrar restaurante. Tente novamente.');
+      console.error('❌ Erro ao cadastrar restaurante:', error);
+      
+      // Extrair mensagem de erro do backend
+      let mensagem = 'Erro ao cadastrar restaurante. Tente novamente.';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (typeof data === 'string') {
+          mensagem = data;
+        } else if (data.message) {
+          mensagem = data.message;
+        } else if (data.erro) {
+          mensagem = data.erro;
+        } else if (data.error) {
+          mensagem = data.error;
+        }
+      }
+      
+      setErro(mensagem);
     } finally {
       setLoading(false);
     }

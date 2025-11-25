@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Clock, CheckCircle, XCircle, UserX } from 'lucide-react';
+import { ticketService } from '../services/api';
 
 export default function HistoricoTickets() {
   const navigate = useNavigate();
@@ -18,27 +19,28 @@ export default function HistoricoTickets() {
   const carregarHistorico = async () => {
     setLoading(true);
     try {
-      // Simulação de dados mockados
-      const ticketsMock = Array.from({ length: 50 }, (_, i) => ({
-        id: `ticket-${i + 1}`,
-        numero: 1000 + i,
-        nomeCliente: `Cliente ${i + 1}`,
-        telefone: `(11) 9${String(i).padStart(4, '0')}-${String(i).padStart(4, '0')}`,
-        quantidadePessoas: Math.floor(Math.random() * 6) + 1,
-        status: ['FINALIZADO', 'CANCELADO', 'NO_SHOW'][Math.floor(Math.random() * 3)],
-        prioridade: ['NORMAL', 'FAST_LANE'][Math.floor(Math.random() * 2)],
-        criadoEm: new Date(2025, 10, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
-        finalizadoEm: new Date(2025, 10, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
-      }));
+      const filaId = localStorage.getItem('filaAtivaId');
       
-      let ticketsFiltrados = ticketsMock;
+      if (!filaId) {
+        console.warn('⚠️ FilaId não encontrado no localStorage');
+        setLoading(false);
+        return;
+      }
+
+      // Buscar histórico de tickets do backend
+      const response = await ticketService.buscarHistorico(filaId);
+      
+      console.log('✅ Histórico carregado:', response);
+      
+      // Filtrar por status se necessário
+      let ticketsFiltrados = response;
       if (filtroStatus !== 'TODOS') {
-        ticketsFiltrados = ticketsMock.filter(t => t.status === filtroStatus);
+        ticketsFiltrados = response.filter(t => t.status === filtroStatus);
       }
       
       setTickets(ticketsFiltrados);
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('❌ Erro ao carregar histórico:', error);
     } finally {
       setLoading(false);
     }

@@ -16,35 +16,16 @@ export default function LoginCliente() {
     setLoading(true);
 
     try {
-      // Simular login sem backend
-      if (email === '1234@gmail.com' && senha === '1234') {
-        // Simular token e dados do cliente
-        const mockToken = 'mock-token-123456';
-        const mockCliente = {
-          id: 'cliente-123',
-          nomeCompleto: 'Cliente Teste',
-          email: '1234@gmail.com',
-          telefone: '11999999999',
-          cidade: 'São Paulo',
-          estado: 'SP',
-          isVip: true,
-          estatisticas: {
-            totalVisitas: 24,
-            vezesNaFastLane: 8,
-            noShows: 0
-          }
-        };
-
-        localStorage.setItem('token', mockToken);
-        localStorage.setItem('cliente', JSON.stringify(mockCliente));
-
-        navigate('/cliente/restaurantes');
-      } else {
-        setErro('Email ou senha incorretos');
-      }
+      // Integração com backend
+      const response = await clienteService.login({ email, senha });
+      const { token, cliente } = response;
+      localStorage.setItem('token', token);
+      localStorage.setItem('clienteLogado', JSON.stringify(cliente));
+      console.log('✅ Cliente logado:', cliente);
+      navigate('/cliente/restaurantes');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      setErro('Erro ao fazer login. Tente novamente.');
+      setErro(error.response?.data?.message || 'Erro ao fazer login. Tente novamente.');
     } finally {
       setLoading(false);
     }

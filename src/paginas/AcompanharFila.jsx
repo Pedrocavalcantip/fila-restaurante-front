@@ -105,49 +105,15 @@ export default function AcompanharFila() {
 
   const carregarTicket = async () => {
     try {
-      // Primeiro tentar buscar do localStorage
-      const ticketLocal = localStorage.getItem('ticketAtivo');
-      
-      if (ticketLocal) {
-        const ticketData = JSON.parse(ticketLocal);
-        setTicket(ticketData);
-        setErro('');
-        setLoading(false);
-        console.log('✅ Ticket carregado do localStorage:', ticketData);
-        return;
-      }
-
-      // Se não tiver no localStorage, tentar API
+      // Buscar ticket ativo da API
       const response = await clienteService.buscarMeuTicket();
-      setTicket(response);
+      setTicket(response.ticket || response);
       setErro('');
+      console.log('✅ Ticket carregado:', response);
     } catch (error) {
       console.error('Erro ao buscar ticket:', error);
-      
-      // Se não encontrar nem no localStorage nem na API, usar dados mockados
-      setTicket({
-        id: 'mock-ticket-123',
-        numero: 2847,
-        status: 'AGUARDANDO',
-        prioridade: 'NORMAL',
-        posicaoAtual: 5,
-        tempoEstimadoMinutos: 15,
-        quantidadePessoas: 4,
-        observacoes: 'Mesa perto da janela se possível',
-        restaurante: {
-          nome: 'Trattoria Bella Vista',
-          telefone: '5511987654321',
-          endereco: 'Rua Augusta, 1234 - São Paulo',
-          slug: 'trattoria-bella-vista',
-          mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado e aproveite nosso ambiente aconchegante.'
-        },
-        fila: {
-          id: 'fila-123',
-          nome: 'Fila Principal'
-        },
-        criadoEm: '2025-11-24T14:30:00.000Z',
-        atualizadoEm: '2025-11-24T14:35:00.000Z'
-      });
+      setErro('Você não possui tickets ativos no momento.');
+      setTicket(null);
     } finally {
       setLoading(false);
     }
@@ -166,14 +132,8 @@ export default function AcompanharFila() {
     setErro('');
 
     try {
-      // TODO: Integrar com API POST /cliente/ticket/{ticketId}/cancelar
-      // await clienteService.cancelarTicket(ticket.id);
-      
-      // Mock: Remover ticket do localStorage
-      localStorage.removeItem('ticketAtivo');
-      console.log('✅ Ticket cancelado com sucesso');
-      
-      // Fechar modal e redirecionar
+      await clienteService.cancelarTicket(ticket.id);
+      console.log('✅ Ticket cancelado');
       setModalCancelarAberto(false);
       navigate('/cliente/restaurantes');
     } catch (error) {
