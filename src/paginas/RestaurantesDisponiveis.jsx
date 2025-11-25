@@ -110,7 +110,8 @@ export default function RestaurantesDisponiveis() {
           nome: restauranteSelecionado.nome,
           slug: restauranteSelecionado.slug,
           endereco: restauranteSelecionado.endereco,
-          telefone: restauranteSelecionado.telefone
+          telefone: restauranteSelecionado.telefone,
+          mensagemBoasVindas: restauranteSelecionado.mensagemBoasVindas || 'Bem-vindo! Aguarde ser chamado.'
         }
       };
 
@@ -373,7 +374,7 @@ const restaurantesMockados = [
     telefone: '5511987654321',
     endereco: 'Rua das Flores, 123 - Centro',
     precoFastlane: 15.00,
-    precoVip: 25.00,
+    mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado e aproveite nosso ambiente aconchegante.',
     imagem: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
     filaAtiva: {
       id: 'fila-1',
@@ -390,7 +391,7 @@ const restaurantesMockados = [
     telefone: '5511987654322',
     endereco: 'Av. Paulista, 1000 - Bela Vista',
     precoFastlane: 20.00,
-    precoVip: 30.00,
+    mensagemBoasVindas: 'Seja bem-vindo ao Sushi Master! Prepare-se para uma experiência única da culinária japonesa.',
     imagem: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80',
     filaAtiva: {
       id: 'fila-2',
@@ -407,7 +408,7 @@ const restaurantesMockados = [
     telefone: '5511987654323',
     endereco: 'Rua Augusta, 500 - Consolação',
     precoFastlane: 18.00,
-    precoVip: 28.00,
+    mensagemBoasVindas: '¡Bienvenido a La Parrilla! Aguarde ser chamado para desfrutar das melhores carnes argentinas.',
     imagem: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80',
     filaAtiva: {
       id: 'fila-3',

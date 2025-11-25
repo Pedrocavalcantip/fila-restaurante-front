@@ -41,7 +41,7 @@ export default function PainelPublico() {
           id: 2,
           numero: 1038,
           fila: 'Almoço',
-          prioridade: 'VIP',
+          prioridade: 'FAST_LANE',
           chamadoEm: new Date(Date.now() - 45000).toISOString() // 45 segundos atrás
         },
         {
@@ -80,8 +80,6 @@ export default function PainelPublico() {
 
   const getPrioridadeIcon = (prioridade) => {
     switch (prioridade) {
-      case 'VIP':
-        return '👑';
       case 'FAST_LANE':
         return '⚡';
       default:
@@ -204,12 +202,7 @@ export default function PainelPublico() {
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-lg">Sistema Online - Atualização Automática</span>
             </div>
-            
             <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">👑</span>
-                <span>VIP</span>
-              </div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">⚡</span>
                 <span>Fast Lane</span>

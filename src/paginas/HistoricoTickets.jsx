@@ -26,7 +26,7 @@ export default function HistoricoTickets() {
         telefone: `(11) 9${String(i).padStart(4, '0')}-${String(i).padStart(4, '0')}`,
         quantidadePessoas: Math.floor(Math.random() * 6) + 1,
         status: ['FINALIZADO', 'CANCELADO', 'NO_SHOW'][Math.floor(Math.random() * 3)],
-        prioridade: ['NORMAL', 'FAST_LANE', 'VIP'][Math.floor(Math.random() * 3)],
+        prioridade: ['NORMAL', 'FAST_LANE'][Math.floor(Math.random() * 2)],
         criadoEm: new Date(2025, 10, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
         finalizadoEm: new Date(2025, 10, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
       }));
@@ -211,12 +211,10 @@ export default function HistoricoTickets() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          ticket.prioridade === 'VIP' ? 'bg-yellow-100 text-yellow-700' :
                           ticket.prioridade === 'FAST_LANE' ? 'bg-orange-100 text-orange-700' :
                           'bg-gray-100 text-gray-700'
                         }`}>
-                          {ticket.prioridade === 'VIP' ? '👑 VIP' :
-                           ticket.prioridade === 'FAST_LANE' ? '⚡ Fast' : 'Normal'}
+                          {ticket.prioridade === 'FAST_LANE' ? '⚡ Fast' : 'Normal'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

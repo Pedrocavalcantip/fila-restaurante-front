@@ -42,12 +42,9 @@ export default function PerfilCliente() {
         cpf: '123.456.789-00',
         cidade: 'São Paulo',
         estado: 'SP',
-        isVip: true,
-        vipDesde: '2024-01-15',
         status: 'ATIVO',
         totalVisitas: 24,
         totalFastLane: 8,
-        totalVip: 5,
         totalNoShows: 0
       };
       setCliente(mockCliente);
@@ -135,26 +132,6 @@ export default function PerfilCliente() {
             Gerencie suas informações e veja suas estatísticas
           </p>
         </div>
-
-        {/* Banner VIP */}
-        {cliente.isVip && (
-          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-300 rounded-xl p-6 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-yellow-400 rounded-full flex items-center justify-center">
-                <Crown size={28} className="text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Cliente VIP</h3>
-                <p className="text-sm text-gray-600">
-                  Você tem acesso exclusivo ao Fast Lane em todos os restaurantes
-                </p>
-              </div>
-            </div>
-            <div className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
-              Ativo
-            </div>
-          </div>
-        )}
 
         {/* Botão Ver Histórico Completo */}
         <button

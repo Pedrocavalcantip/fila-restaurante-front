@@ -10,7 +10,6 @@ export default function CadastroRestaurante() {
     emailAdmin: '',
     senhaAdmin: '',
     precoFastlane: 15,
-    precoVip: 25,
     maxReentradasPorDia: 3,
     cnpj: '',
     telefone: '',
@@ -277,22 +276,6 @@ export default function CadastroRestaurante() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="precoVip" className="block text-sm font-medium text-gray-700 mb-1">
-                      Preço VIP (R$) *
-                    </label>
-                    <input
-                      id="precoVip"
-                      name="precoVip"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.precoVip}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
-                    />
-                  </div>
-                  <div>
                     <label htmlFor="maxReentradasPorDia" className="block text-sm font-medium text-gray-700 mb-1">
                       Max. Reentradas/Dia *
                     </label>
@@ -492,7 +475,7 @@ export default function CadastroRestaurante() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
-                  <span>Sistema VIP/Fast-Lane para gerar receita adicional</span>
+                  <span>Sistema Fast-Lane para gerar receita adicional</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />

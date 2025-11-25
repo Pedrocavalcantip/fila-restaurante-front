@@ -32,7 +32,7 @@ export default function HistoricoClienteTickets() {
         },
         quantidadePessoas: Math.floor(Math.random() * 6) + 1,
         status: ['FINALIZADO', 'CANCELADO', 'NO_SHOW'][Math.floor(Math.random() * 3)],
-        prioridade: ['NORMAL', 'FAST_LANE', 'VIP'][Math.floor(Math.random() * 3)],
+        prioridade: ['NORMAL', 'FAST_LANE'][Math.floor(Math.random() * 2)],
         criadoEm: new Date(2025, 0, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
         finalizadoEm: new Date(2025, 0, Math.floor(Math.random() * 30) + 1, Math.floor(Math.random() * 24), Math.floor(Math.random() * 60)).toISOString(),
         tempoEsperaMinutos: Math.floor(Math.random() * 60) + 10,
@@ -262,13 +262,11 @@ export default function HistoricoClienteTickets() {
 
                   <div>
                     <p className="text-xs text-gray-600 mb-1">Tipo</p>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      ticket.prioridade === 'VIP' ? 'bg-yellow-100 text-yellow-700' :
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       ticket.prioridade === 'FAST_LANE' ? 'bg-orange-100 text-orange-700' :
                       'bg-gray-100 text-gray-700'
-                    }`}>
-                      {ticket.prioridade === 'VIP' ? '👑 VIP' :
-                       ticket.prioridade === 'FAST_LANE' ? '⚡ Fast' : 'Normal'}
+                      }`}>
+                      {ticket.prioridade === 'FAST_LANE' ? '⚡ Fast' : 'Normal'}
                     </span>
                   </div>
 

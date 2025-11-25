@@ -265,13 +265,6 @@ export default function DetalhesTicket() {
                   <p className="font-medium text-gray-900">{ticket.quantidadePessoas}</p>
                 </div>
               </div>
-
-              {ticket.cliente?.isVip && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <span className="text-2xl">👑</span>
-                  <span className="font-medium text-yellow-700">Cliente VIP</span>
-                </div>
-              )}
             </div>
 
             {/* Informações do Ticket */}
@@ -312,12 +305,12 @@ export default function DetalhesTicket() {
                 </div>
               )}
 
-              {ticket.prioridade !== 'NORMAL' && (
+              {ticket.prioridade === 'FAST_LANE' && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
                   <span className="text-2xl">⚡</span>
                   <div>
                     <p className="font-medium text-orange-700">
-                      {ticket.prioridade === 'VIP' ? 'VIP' : 'Fast Lane'}
+                      Fast Lane
                     </p>
                     {ticket.valorPago && (
                       <p className="text-sm text-orange-600">

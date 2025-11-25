@@ -1,4 +1,4 @@
-import { Settings, UserCog, ArrowLeft, Tv, History } from 'lucide-react';
+import { Settings, UserCog, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function PainelAdministrativo() {
@@ -37,7 +37,7 @@ function PainelAdministrativo() {
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Gerenciamento</h2>
               <p className="text-gray-600 mb-8">
-                Gerencie equipe, operadores e configurações de filas
+                Gerencie equipe, operadores e configurações do restaurante
               </p>
               <button
                 onClick={() => navigate('/restaurante/gerenciamento')}
@@ -63,63 +63,6 @@ function PainelAdministrativo() {
                 className="w-full bg-white hover:bg-gray-50 text-orange-600 font-semibold py-4 px-6 rounded-xl border-2 border-orange-600 transition-colors"
               >
                 Acessar Fila ao Vivo
-              </button>
-            </div>
-          </div>
-
-          {/* Card Configurações */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                <Settings className="w-8 h-8 text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">Configurações</h2>
-              <p className="text-gray-600 mb-8">
-                Configure preços, limites e informações do restaurante
-              </p>
-              <button
-                onClick={() => navigate('/restaurante/configuracoes')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors"
-              >
-                Acessar Configurações
-              </button>
-            </div>
-          </div>
-
-          {/* Card Histórico */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                <History className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">Histórico</h2>
-              <p className="text-gray-600 mb-8">
-                Consulte o histórico completo de todos os tickets
-              </p>
-              <button
-                onClick={() => navigate('/restaurante/historico-tickets')}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors"
-              >
-                Ver Histórico
-              </button>
-            </div>
-          </div>
-
-          {/* Card Painel Público */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow md:col-span-2">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
-                <Tv className="w-8 h-8 text-purple-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-3">Painel Público (TV)</h2>
-              <p className="text-gray-600 mb-8">
-                Display para TV mostrando tickets chamados em tempo real
-              </p>
-              <button
-                onClick={() => navigate('/publico/painel')}
-                className="max-w-md mx-auto w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-4 px-6 rounded-xl transition-colors"
-              >
-                Abrir Painel Público
               </button>
             </div>
           </div>

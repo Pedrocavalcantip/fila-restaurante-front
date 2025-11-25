@@ -12,76 +12,100 @@ function PainelOperador() {
   const [filaId, setFilaId] = useState('fila-123'); // TODO: Obter do contexto/localStorage
   const [ticketSelecionado, setTicketSelecionado] = useState(null);
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalCancelarAberto, setModalCancelarAberto] = useState(false);
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
+  const [ticketParaCancelar, setTicketParaCancelar] = useState(null);
+  const [modalAdicionarAberto, setModalAdicionarAberto] = useState(false);
+  const [novoCliente, setNovoCliente] = useState({
+    nomeCliente: '',
+    telefone: '',
+    quantidadePessoas: 1,
+    observacoes: ''
+  });
 
   // Carregar fila a cada 5 segundos (polling - substituir por WebSocket)
   useEffect(() => {
     carregarFila();
-    const interval = setInterval(carregarFila, 5000);
-    return () => clearInterval(interval);
+    // Comentado polling para não sobrescrever alterações locais durante testes
+    // TODO: Reativar quando integrar com backend real via WebSocket
+    // const interval = setInterval(carregarFila, 5000);
+    // return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const carregarFila = async () => {
     setLoading(true);
     try {
-      // TODO: Integrar com API GET /tickets/filas/{filaId}/tickets/ativa
-      // Response: { fila, tickets, estatisticas: { totalAguardando, totalChamados } }
-      
-      const mockData = {
-        fila: {
-          id: 'fila-123',
-          nome: 'Fila Principal',
-          restauranteId: 'rest-123'
-        },
-        tickets: [
-          {
-            id: 'ticket-1',
-            numero: 'A-023',
-            nomeCliente: 'João Silva',
-            telefone: '11987654321',
-            quantidadePessoas: 2,
-            prioridade: 'NORMAL',
-            status: 'AGUARDANDO',
-            posicao: 1,
-            tempoEstimadoMinutos: 5,
-            criadoEm: new Date(Date.now() - 5 * 60000).toISOString(),
-            observacoes: 'Cadeira de bebê'
+      // Tenta carregar do localStorage primeiro
+      const ticketsSalvos = localStorage.getItem('painelOperadorTickets');
+      const estatisticasSalvas = localStorage.getItem('painelOperadorEstatisticas');
+      const filaSalva = localStorage.getItem('painelOperadorFila');
+
+      if (ticketsSalvos && estatisticasSalvas && filaSalva) {
+        setTickets(JSON.parse(ticketsSalvos));
+        setEstatisticas(JSON.parse(estatisticasSalvas));
+        setFilaData(JSON.parse(filaSalva));
+      } else {
+        // Mock inicial
+        const mockData = {
+          fila: {
+            id: 'fila-123',
+            nome: 'Fila Principal',
+            restauranteId: 'rest-123'
           },
-          {
-            id: 'ticket-2',
-            numero: 'A-024',
-            nomeCliente: 'Maria Santos',
-            telefone: '11987651234',
-            quantidadePessoas: 4,
-            prioridade: 'FAST_LANE',
-            status: 'AGUARDANDO',
-            posicao: 2,
-            tempoEstimadoMinutos: 3,
-            criadoEm: new Date(Date.now() - 3 * 60000).toISOString()
-          },
-          {
-            id: 'ticket-3',
-            numero: 'A-025',
-            nomeCliente: 'Carlos Oliveira',
-            telefone: '11987655678',
-            quantidadePessoas: 2,
-            prioridade: 'NORMAL',
-            status: 'CHAMADO',
-            posicao: 3,
-            tempoEstimadoMinutos: 0,
-            chamadasCount: 1,
-            criadoEm: new Date(Date.now() - 12 * 60000).toISOString()
+          tickets: [
+            {
+              id: 'ticket-1',
+              numero: 'A-023',
+              nomeCliente: 'João Silva',
+              telefone: '11987654321',
+              quantidadePessoas: 2,
+              prioridade: 'NORMAL',
+              status: 'AGUARDANDO',
+              posicao: 1,
+              tempoEstimadoMinutos: 5,
+              criadoEm: new Date(Date.now() - 5 * 60000).toISOString(),
+              observacoes: 'Cadeira de bebê'
+            },
+            {
+              id: 'ticket-2',
+              numero: 'A-024',
+              nomeCliente: 'Maria Santos',
+              telefone: '11987651234',
+              quantidadePessoas: 4,
+              prioridade: 'FAST_LANE',
+              status: 'AGUARDANDO',
+              posicao: 2,
+              tempoEstimadoMinutos: 3,
+              criadoEm: new Date(Date.now() - 3 * 60000).toISOString()
+            },
+            {
+              id: 'ticket-3',
+              numero: 'A-025',
+              nomeCliente: 'Carlos Oliveira',
+              telefone: '11987655678',
+              quantidadePessoas: 2,
+              prioridade: 'NORMAL',
+              status: 'CHAMADO',
+              posicao: 3,
+              tempoEstimadoMinutos: 0,
+              chamadasCount: 1,
+              criadoEm: new Date(Date.now() - 12 * 60000).toISOString()
+            }
+          ],
+          estatisticas: {
+            totalAguardando: 2,
+            totalChamados: 1
           }
-        ],
-        estatisticas: {
-          totalAguardando: 2,
-          totalChamados: 1
-        }
-      };
-      
-      setFilaData(mockData.fila);
-      setTickets(mockData.tickets);
-      setEstatisticas(mockData.estatisticas);
+        };
+        setFilaData(mockData.fila);
+        setTickets(mockData.tickets);
+        setEstatisticas(mockData.estatisticas);
+        // Salva no localStorage para persistir alterações
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(mockData.tickets));
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(mockData.estatisticas));
+        localStorage.setItem('painelOperadorFila', JSON.stringify(mockData.fila));
+      }
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
     } finally {
@@ -91,6 +115,8 @@ function PainelOperador() {
 
   const atualizarFila = async () => {
     setAtualizando(true);
+    // TODO: Quando integrar com backend, fazer GET /tickets/filas/{filaId}/tickets/ativa
+    // Por enquanto, apenas recarrega do localStorage
     await carregarFila();
     setAtualizando(false);
   };
@@ -99,8 +125,24 @@ function PainelOperador() {
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/chamar
       // Muda status AGUARDANDO -> CHAMADO, emite WebSocket
-      console.log('Chamando cliente:', ticketId);
-      await carregarFila();
+      console.log('🔔 Chamando cliente:', ticketId);
+      setTickets(prevTickets => {
+        const novos = prevTickets.map(ticket =>
+          ticket.id === ticketId
+            ? { ...ticket, status: 'CHAMADO', chamadasCount: 1 }
+            : ticket
+        );
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        return novos;
+      });
+      setEstatisticas(prev => {
+        const novo = {
+          totalAguardando: prev.totalAguardando - 1,
+          totalChamados: prev.totalChamados + 1
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
     } catch (error) {
       console.error('Erro ao chamar cliente:', error);
     }
@@ -110,8 +152,18 @@ function PainelOperador() {
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/rechamar
       // Incrementa contagemRechamada, mantém status CHAMADO
-      console.log('Rechamando cliente:', ticketId);
-      await carregarFila();
+      console.log('🔁 Rechamando cliente:', ticketId);
+      
+      // Mock: Incrementar contador de chamadas
+      setTickets(prevTickets => {
+        const novos = prevTickets.map(ticket => 
+          ticket.id === ticketId 
+            ? { ...ticket, chamadasCount: (ticket.chamadasCount || 0) + 1 }
+            : ticket
+        );
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        return novos;
+      });
     } catch (error) {
       console.error('Erro ao rechamar cliente:', error);
     }
@@ -121,8 +173,28 @@ function PainelOperador() {
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/finalizar
       // Muda status para FINALIZADO
-      console.log('Finalizando atendimento:', ticketId);
-      await carregarFila();
+      console.log('✅ Finalizando atendimento:', ticketId);
+      
+      // Mock: Remover ticket da lista (foi finalizado)
+      setTickets(prevTickets => {
+        const novos = prevTickets.filter(ticket => ticket.id !== ticketId);
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        return novos;
+      });
+      
+      // Atualizar estatísticas
+      setEstatisticas(prev => {
+        const novo = {
+          ...prev,
+          totalChamados: prev.totalChamados - 1
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
+      
+      // Fechar modal se estiver aberto
+      setModalAberto(false);
+      setTicketSelecionado(null);
     } catch (error) {
       console.error('Erro ao finalizar atendimento:', error);
     }
@@ -132,8 +204,26 @@ function PainelOperador() {
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/pular
       // Retorna ticket para o fim da fila (CHAMADO -> AGUARDANDO)
-      console.log('Pulando vez:', ticketId);
-      await carregarFila();
+      console.log('⏭️ Pulando vez:', ticketId);
+      
+      // Mock: Voltar para AGUARDANDO no fim da fila
+      setTickets(prevTickets => {
+        const ticket = prevTickets.find(t => t.id === ticketId);
+        const outros = prevTickets.filter(t => t.id !== ticketId);
+        const novos = [...outros, { ...ticket, status: 'AGUARDANDO' }];
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        return novos;
+      });
+      
+      // Atualizar estatísticas
+      setEstatisticas(prev => {
+        const novo = {
+          totalAguardando: prev.totalAguardando + 1,
+          totalChamados: prev.totalChamados - 1
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
     } catch (error) {
       console.error('Erro ao pular vez:', error);
     }
@@ -145,24 +235,136 @@ function PainelOperador() {
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/no-show
       // Status NO_SHOW, incrementa estatística do cliente
-      console.log('Marcando no-show:', ticketId);
-      await carregarFila();
+      console.log('❌ Marcando no-show:', ticketId);
+      
+      // Mock: Remover ticket da lista (no-show)
+      setTickets(prevTickets => {
+        const novos = prevTickets.filter(ticket => ticket.id !== ticketId);
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        return novos;
+      });
+      
+      // Atualizar estatísticas
+      setEstatisticas(prev => {
+        const novo = {
+          ...prev,
+          totalChamados: prev.totalChamados - 1
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
+      
+      // Fechar modal se estiver aberto
+      setModalAberto(false);
+      setTicketSelecionado(null);
     } catch (error) {
       console.error('Erro ao marcar no-show:', error);
     }
   };
 
-  const cancelarTicket = async (ticketId) => {
-    const motivo = window.prompt('Motivo do cancelamento:');
-    if (!motivo) return;
+  const abrirModalCancelar = (ticketId) => {
+    setTicketParaCancelar(ticketId);
+    setModalCancelarAberto(true);
+  };
+
+  const cancelarTicket = async () => {
+    if (!motivoCancelamento.trim()) {
+      alert('Por favor, informe o motivo do cancelamento.');
+      return;
+    }
 
     try {
       // TODO: Integrar com API POST /tickets/{ticketId}/cancelar
       // Body: { motivo }, Status CANCELADO
-      console.log('Cancelando ticket:', ticketId, motivo);
-      await carregarFila();
+      console.log('🚫 Cancelando ticket:', ticketParaCancelar, 'Motivo:', motivoCancelamento);
+      
+      const ticket = tickets.find(t => t.id === ticketParaCancelar);
+      
+      // Mock: Remover ticket da lista (cancelado)
+      setTickets(prevTickets => {
+        console.log('📊 Tickets ANTES de cancelar:', prevTickets.length);
+        const novos = prevTickets.filter(t => t.id !== ticketParaCancelar);
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        console.log('📊 Tickets DEPOIS de cancelar:', novos.length);
+        console.log('💾 Salvou no localStorage:', novos);
+        return novos;
+      });
+      
+      // Atualizar estatísticas
+      setEstatisticas(prev => {
+        const novo = {
+          totalAguardando: ticket?.status === 'AGUARDANDO' ? prev.totalAguardando - 1 : prev.totalAguardando,
+          totalChamados: ticket?.status === 'CHAMADO' ? prev.totalChamados - 1 : prev.totalChamados
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
+      
+      // Fechar modals
+      setModalAberto(false);
+      setTicketSelecionado(null);
+      setModalCancelarAberto(false);
+      setMotivoCancelamento('');
+      setTicketParaCancelar(null);
     } catch (error) {
       console.error('Erro ao cancelar ticket:', error);
+    }
+  };
+
+  const adicionarClientePresencial = async () => {
+    if (!novoCliente.nomeCliente.trim() || !novoCliente.telefone.trim()) {
+      alert('Nome e telefone são obrigatórios.');
+      return;
+    }
+
+    try {
+      // TODO: Integrar com API POST /tickets/filas/{filaId}/tickets
+      // Body: { nomeCliente, telefone, quantidadePessoas, observacoes }
+      console.log('➕ Adicionando cliente presencial:', novoCliente);
+      
+      // Mock: Gerar novo ticket
+      const novoTicket = {
+        id: `ticket-${Date.now()}`,
+        numero: `A-${String(tickets.length + 1).padStart(3, '0')}`,
+        ...novoCliente,
+        prioridade: 'NORMAL',
+        status: 'AGUARDANDO',
+        posicao: tickets.filter(t => t.status === 'AGUARDANDO').length + 1,
+        tempoEstimadoMinutos: (tickets.filter(t => t.status === 'AGUARDANDO').length + 1) * 5,
+        criadoEm: new Date().toISOString(),
+        chamadasCount: 0
+      };
+      
+      // Adicionar à lista
+      setTickets(prevTickets => {
+        console.log('📊 Tickets ANTES de adicionar:', prevTickets.length);
+        const novos = [...prevTickets, novoTicket];
+        localStorage.setItem('painelOperadorTickets', JSON.stringify(novos));
+        console.log('📊 Tickets DEPOIS de adicionar:', novos.length);
+        console.log('💾 Salvou no localStorage:', novos);
+        return novos;
+      });
+      
+      // Atualizar estatísticas
+      setEstatisticas(prev => {
+        const novo = {
+          ...prev,
+          totalAguardando: prev.totalAguardando + 1
+        };
+        localStorage.setItem('painelOperadorEstatisticas', JSON.stringify(novo));
+        return novo;
+      });
+      
+      // Limpar form e fechar modal
+      setNovoCliente({
+        nomeCliente: '',
+        telefone: '',
+        quantidadePessoas: 1,
+        observacoes: ''
+      });
+      setModalAdicionarAberto(false);
+    } catch (error) {
+      console.error('Erro ao adicionar cliente:', error);
     }
   };
 
@@ -201,6 +403,21 @@ function PainelOperador() {
     });
   };
 
+  const handleVoltar = () => {
+    // Verificar role do usuário logado
+    const operadorLogado = JSON.parse(localStorage.getItem('operadorLogado') || '{}');
+    const role = operadorLogado.role;
+
+    // ADMIN tem acesso ao Painel Administrativo
+    // OPERADOR volta para a tela de login
+    if (role === 'ADMIN') {
+      navigate('/restaurante/painel');
+    } else {
+      // Operador volta para login
+      navigate('/restaurante/login');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -209,7 +426,7 @@ function PainelOperador() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate('/restaurante/painel')}
+                onClick={handleVoltar}
                 className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
@@ -235,6 +452,13 @@ function PainelOperador() {
               >
                 <History className="w-4 h-4" />
                 Histórico
+              </button>
+              <button
+                onClick={() => setModalAdicionarAberto(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                Adicionar Cliente
               </button>
               <button
                 onClick={atualizarFila}
@@ -361,9 +585,15 @@ function PainelOperador() {
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-orange-500" />
-                            <span className="font-semibold text-orange-600">
-                              Aguardando {formatarTempoEspera(ticket.criadoEm)}
-                            </span>
+                            {ticket.status === 'CHAMADO' ? (
+                              <span className="font-semibold text-green-600">
+                                Chamado há {formatarTempoEspera(ticket.criadoEm)}
+                              </span>
+                            ) : (
+                              <span className="font-semibold text-orange-600">
+                                Aguardando {formatarTempoEspera(ticket.criadoEm)}
+                              </span>
+                            )}
                           </div>
                           {ticket.chamadasCount > 0 && (
                             <div className="flex items-center gap-2">
@@ -393,7 +623,7 @@ function PainelOperador() {
                             🔔 Chamar Cliente
                           </button>
                           <button
-                            onClick={() => cancelarTicket(ticket.id)}
+                            onClick={() => abrirModalCancelar(ticket.id)}
                             className="w-full px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-2"
                           >
                             <XCircle className="w-4 h-4" />
@@ -593,7 +823,7 @@ function PainelOperador() {
                       🔔 Chamar Cliente
                     </button>
                     <button
-                      onClick={() => { cancelarTicket(ticketSelecionado.id); fecharModal(); }}
+                      onClick={() => { abrirModalCancelar(ticketSelecionado.id); }}
                       className="px-4 py-3 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all font-semibold"
                     >
                       Cancelar
@@ -617,6 +847,137 @@ function PainelOperador() {
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Cancelamento */}
+      {modalCancelarAberto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setModalCancelarAberto(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Cancelar Ticket</h2>
+                <p className="text-sm text-gray-600">Esta ação não pode ser desfeita</p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Motivo do cancelamento *
+              </label>
+              <textarea
+                value={motivoCancelamento}
+                onChange={(e) => setMotivoCancelamento(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                rows="3"
+                placeholder="Ex: Cliente desistiu, problema no sistema..."
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setModalCancelarAberto(false); setMotivoCancelamento(''); setTicketParaCancelar(null); }}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={cancelarTicket}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+              >
+                Confirmar Cancelamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Adicionar Cliente Presencial */}
+      {modalAdicionarAberto && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setModalAdicionarAberto(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Adicionar Cliente</h2>
+                <p className="text-sm text-gray-600">Adicionar cliente presencial na fila</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nome do Cliente *
+                </label>
+                <input
+                  type="text"
+                  value={novoCliente.nomeCliente}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, nomeCliente: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefone *
+                </label>
+                <input
+                  type="tel"
+                  value={novoCliente.telefone}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="(11) 98765-4321"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantidade de Pessoas
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={novoCliente.quantidadePessoas}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, quantidadePessoas: parseInt(e.target.value) || 1 })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Observações
+                </label>
+                <textarea
+                  value={novoCliente.observacoes}
+                  onChange={(e) => setNovoCliente({ ...novoCliente, observacoes: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  rows="2"
+                  placeholder="Ex: Cadeira de bebê, mesa próxima à janela..."
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => { setModalAdicionarAberto(false); setNovoCliente({ nomeCliente: '', telefone: '', quantidadePessoas: 1, observacoes: '' }); }}
+                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={adicionarClientePresencial}
+                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold"
+              >
+                Adicionar à Fila
+              </button>
             </div>
           </div>
         </div>

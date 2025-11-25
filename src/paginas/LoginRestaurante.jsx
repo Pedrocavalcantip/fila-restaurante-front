@@ -4,8 +4,9 @@ import { ArrowLeft, Building2 } from 'lucide-react';
 import { authService } from '../services/api';
 
 export default function LoginRestaurante() {
-  const [email, setEmail] = useState('funcionario@restaurante.com');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [slug, setSlug] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
@@ -16,28 +17,44 @@ export default function LoginRestaurante() {
     setLoading(true);
 
     try {
-      // Simular login do operador/admin
-      const mockToken = 'mock-token-operador-123456';
-      const mockOperador = {
-        id: 'operador-123',
-        nome: 'Operador Teste',
+      // TODO: Integrar com API POST /auth/login
+      // Body: { email, senha, restauranteSlug }
+      
+      // Mock: Determinar role baseado no email
+      // admin@restaurante.com = ADMIN
+      // operador@restaurante.com = OPERADOR
+      const isAdmin = email.toLowerCase().includes('admin');
+      const role = isAdmin ? 'ADMIN' : 'OPERADOR';
+      
+      const mockToken = 'mock-token-' + Date.now();
+      const mockUsuario = {
+        id: 'user-' + Date.now(),
+        nome: isAdmin ? 'Admin Principal' : 'Operador de Caixa',
         email: email,
-        role: 'OPERADOR',
+        role: role,
         restaurante: {
           id: 'rest-123',
           nome: 'Trattoria Bella Vista',
-          slug: 'trattoria-bella-vista'
+          slug: slug
         }
       };
 
-      localStorage.setItem('token', mockToken);
-      localStorage.setItem('operador', JSON.stringify(mockOperador));
+      localStorage.setItem('restauranteToken', mockToken);
+      localStorage.setItem('operadorLogado', JSON.stringify(mockUsuario));
+      localStorage.setItem('restauranteSlug', slug);
 
-      // Redirecionar para o painel do restaurante
-      navigate('/restaurante/dashboard');
+      console.log('✅ Login realizado com sucesso:', mockUsuario);
+      console.log('📌 Role:', role);
+
+      // Redirecionar baseado no role
+      if (role === 'ADMIN') {
+        navigate('/restaurante/painel'); // Painel Administrativo
+      } else {
+        navigate('/restaurante/painel-operador'); // Painel do Operador
+      }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
-      setErro('Erro ao fazer login. Tente novamente.');
+      setErro('Credenciais inválidas ou restaurante não encontrado.');
     } finally {
       setLoading(false);
     }
@@ -81,6 +98,28 @@ export default function LoginRestaurante() {
 
           {/* Formulário */}
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* Campo Slug do Restaurante */}
+            <div>
+              <label 
+                htmlFor="slug" 
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Slug do Restaurante
+              </label>
+              <input
+                id="slug"
+                type="text"
+                placeholder="meu-restaurante"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                required
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Ex: trattoria-bella-vista
+              </p>
+            </div>
+
             {/* Campo Email */}
             <div>
               <label 
@@ -92,7 +131,7 @@ export default function LoginRestaurante() {
               <input
                 id="email"
                 type="email"
-                placeholder="funcionario@restaurante.com"
+                placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -133,6 +172,17 @@ export default function LoginRestaurante() {
           <p className="mt-5 text-center text-sm text-gray-600">
             Esqueceu a senha? Entre em contato com o administrador
           </p>
+
+          {/* Dica de Login */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-xs text-blue-800 text-center font-medium mb-1">
+              💡 Dica para testes:
+            </p>
+            <p className="text-xs text-blue-700 text-center">
+              Use <strong>admin@restaurante.com</strong> para ADMIN<br/>
+              Use <strong>operador@restaurante.com</strong> para OPERADOR
+            </p>
+          </div>
 
           {/* Separador */}
           <div className="mt-6 pt-6 border-t border-gray-200">

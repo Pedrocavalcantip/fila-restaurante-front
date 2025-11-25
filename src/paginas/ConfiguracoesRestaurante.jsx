@@ -22,7 +22,6 @@ export default function ConfiguracoesRestaurante() {
       cep: ''
     },
     precoFastLane: '',
-    precoVip: '',
     limiteTicketsPorCliente: '',
     tempoToleranciaMinutos: '',
     mensagemBoasVindas: ''
@@ -52,7 +51,6 @@ export default function ConfiguracoesRestaurante() {
           cep: '01234-567'
         },
         precoFastLane: '15.00',
-        precoVip: '0.00',
         limiteTicketsPorCliente: '3',
         tempoToleranciaMinutos: '10',
         mensagemBoasVindas: 'Bem-vindo ao Restaurante Sabor & Arte! Aguarde ser chamado.'
@@ -359,21 +357,6 @@ export default function ConfiguracoesRestaurante() {
                   placeholder="15.00"
                 />
                 <p className="text-xs text-gray-500 mt-1">Valor cobrado para entrada prioritária</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preço VIP (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={configuracoes.precoVip}
-                  onChange={(e) => handleChange('precoVip', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                  placeholder="0.00"
-                />
-                <p className="text-xs text-gray-500 mt-1">Deixe em 0 se VIP é apenas status</p>
               </div>
             </div>
           </div>

@@ -21,7 +21,6 @@ function GerenciamentoFilas() {
         nome: 'Trattoria Bella Vista',
         slug: 'trattoria-bella-vista',
         precoFastlane: 15.00,
-        precoVip: 25.00,
         maxReentradasPorDia: 3,
         tempoMedioAtendimento: 15,
         status: 'ATIVO',
@@ -103,7 +102,7 @@ function GerenciamentoFilas() {
             <p className="text-sm font-medium text-blue-900 mb-1">Fila Única do Sistema</p>
             <p className="text-xs text-blue-700">
               A fila padrão foi criada automaticamente no cadastro do restaurante. 
-              Os preços de Fast Lane e VIP são configurações globais do restaurante.
+              O preço de Fast Lane é uma configuração global do restaurante.
             </p>
           </div>
         </div>
@@ -116,7 +115,7 @@ function GerenciamentoFilas() {
           </div>
           
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Preço Fast Lane (R$)
@@ -129,17 +128,6 @@ function GerenciamentoFilas() {
                 />
                 <p className="text-xs text-gray-500 mt-1">Fila rápida com prioridade</p>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preço VIP (R$)
-                </label>
-                <input
-                  type="number"
-                  value={restaurante?.precoVip || 0}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 cursor-not-allowed"
-                />
                 <p className="text-xs text-gray-500 mt-1">Prioridade máxima</p>
               </div>
               
@@ -215,7 +203,6 @@ function GerenciamentoFilas() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

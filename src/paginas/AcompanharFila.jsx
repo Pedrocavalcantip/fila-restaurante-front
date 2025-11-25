@@ -138,7 +138,8 @@ export default function AcompanharFila() {
           nome: 'Trattoria Bella Vista',
           telefone: '5511987654321',
           endereco: 'Rua Augusta, 1234 - São Paulo',
-          slug: 'trattoria-bella-vista'
+          slug: 'trattoria-bella-vista',
+          mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado e aproveite nosso ambiente aconchegante.'
         },
         fila: {
           id: 'fila-123',
@@ -489,6 +490,19 @@ export default function AcompanharFila() {
             </div>
           </div>
         </div>
+
+        {/* Mensagem de Boas-Vindas do Restaurante */}
+        {ticket?.restaurante?.mensagemBoasVindas && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+            <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-blue-900 mb-1">Mensagem do Restaurante</p>
+              <p className="text-xs text-blue-700">
+                {ticket.restaurante.mensagemBoasVindas}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Alerta */}
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-3">

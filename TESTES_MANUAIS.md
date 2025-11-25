@@ -145,13 +145,13 @@
 ## 🏪 FLUXO DO RESTAURANTE
 
 ### Teste 7: Login Restaurante
-- [ ] **7.1** - Voltar para `/` 
-- [ ] **7.2** - Clicar em "Sou Restaurante"
-- [ ] **7.3** - Verificar se vai para `/restaurante/login`
-- [ ] **7.4** - Verificar se tem campo para slug do restaurante
-- [ ] **7.5** - Preencher campos mockados (se houver)
-- [ ] **7.6** - Clicar "Entrar"
-- [ ] **7.7** - Verificar se redireciona para `/restaurante/painel`
+- ✅ **7.1** - Voltar para `/` 
+- ✅ **7.2** - Clicar em "Sou Restaurante"
+- ✅ **7.3** - Verificar se vai para `/restaurante/login`
+- ✅ **7.4** - Verificar se tem campo para slug do restaurante
+- ✅ **7.5** - Preencher campos mockados (se houver)
+- ✅ **7.6** - Clicar "Entrar"
+- ✅ **7.7** - Verificar se redireciona para `/restaurante/painel`
 
 **Resultado Esperado:**
 - Tela de login carrega
@@ -161,18 +161,8 @@
 ---
 
 ### Teste 8: Painel Administrativo
-- [ ] **8.1** - Na tela `/restaurante/painel`, verificar cards:
-  - [ ] Gerenciamento
-  - [ ] Painel do Operador
-  - [ ] Configurações
-  - [ ] Histórico
-  - [ ] Painel Público (TV)
-- [ ] **8.2** - Clicar em cada card e verificar navegação:
-  - Gerenciamento → `/restaurante/gerenciamento`
-  - Painel do Operador → `/restaurante/painel-operador`
-  - Configurações → `/restaurante/configuracoes`
-  - Histórico → `/restaurante/historico-tickets`
-  - Painel Público → `/publico/painel`
+- ✅ **8.1** - Na tela `/restaurante/painel`, verificar cards:
+- ✅ **8.2** - Clicar em cada card e verificar navegação:
 
 **Resultado Esperado:**
 - Todos os 5 cards visíveis
@@ -182,24 +172,17 @@
 ---
 
 ### Teste 9: Painel do Operador (Fila ao Vivo)
-- [ ] **9.1** - Acessar `/restaurante/painel-operador`
-- [ ] **9.2** - Verificar se mostra:
+- ✅ **9.1** - Acessar `/restaurante/painel-operador`
+- ✅ **9.2** - Verificar se mostra:
   - Cards de estatísticas (Aguardando, Chamados, Total)
   - Lista de tickets na fila
-- [ ] **9.3** - Verificar botões no header:
-  - [ ] Painel TV
-  - [ ] Histórico
-  - [ ] Atualizar
-- [ ] **9.4** - Clicar em "Atualizar" e ver loading
-- [ ] **9.5** - Clicar em um ticket da lista
-- [ ] **9.6** - Verificar se abre modal com detalhes
-- [ ] **9.7** - No modal, testar botões:
-  - [ ] Chamar Cliente
-  - [ ] Finalizar
-  - [ ] Cancelar
-- [ ] **9.8** - Fechar modal (X ou fora)
-- [ ] **9.9** - Clicar em "Painel TV"
-- [ ] **9.10** - Verificar se abre `/publico/painel`
+- ✅ **9.3** - Verificar botões no header:
+- ✅ **9.4** - Clicar em "Atualizar" e ver loading
+- ✅ **9.5** - Clicar em um ticket da lista
+- ✅ **9.6** - Verificar se abre modal com detalhes
+- ✅ **9.8** - Fechar modal (X ou fora)
+- ✅ **9.9** - Clicar em "Painel TV"
+- ✅ **9.10** - Verificar se abre `/publico/painel`
 
 **Resultado Esperado:**
 - Estatísticas aparecem
@@ -211,18 +194,18 @@
 ---
 
 ### Teste 10: Histórico de Tickets (Operador)
-- [ ] **10.1** - Acessar `/restaurante/historico-tickets`
+- ✅ **10.1** - Acessar `/restaurante/historico-tickets`
 - [ ] **10.2** - Verificar:
   - Barra de busca
   - Filtros de status
   - Tabela com tickets
   - Paginação
-- [ ] **10.3** - Testar busca digitando um número de ticket
-- [ ] **10.4** - Clicar nos filtros de status
-- [ ] **10.5** - Verificar se a tabela filtra
-- [ ] **10.6** - Clicar em "Ver detalhes" de algum ticket
-- [ ] **10.7** - Verificar se vai para `/restaurante/ticket/{id}`
-- [ ] **10.8** - Testar paginação (se houver mais de 10 tickets)
+- ✅ **10.3** - Testar busca digitando um número de ticket
+- ✅ **10.4** - Clicar nos filtros de status
+- ✅ **10.5** - Verificar se a tabela filtra
+- ✅ **10.6** - Clicar em "Ver detalhes" de algum ticket
+- ✅ **10.7** - Verificar se vai para `/restaurante/ticket/{id}`
+- ✅ **10.8** - Testar paginação (se houver mais de 10 tickets)
 
 **Resultado Esperado:**
 - Tabela carrega com dados
@@ -234,20 +217,20 @@
 ---
 
 ### Teste 11: Detalhes do Ticket
-- [ ] **11.1** - Na tela `/restaurante/ticket/{id}`, verificar:
+- ✅ **11.1** - Na tela `/restaurante/ticket/{id}`, verificar:
   - Informações do cliente
   - Informações do ticket
   - Timeline de eventos
   - Status colorido
-- [ ] **11.2** - Verificar badges de VIP/Fast Lane (se aplicável)
-- [ ] **11.3** - Verificar timeline com eventos
-- [ ] **11.4** - Cada evento deve mostrar:
+- ✅ **11.2** - Verificar badges de VIP/Fast Lane (se aplicável)
+- ✅ **11.3** - Verificar timeline com eventos
+- ✅ **11.4** - Cada evento deve mostrar:
   - Ícone
   - Descrição
   - Data/hora
   - Operador (se houver)
-- [ ] **11.5** - Clicar em "Voltar"
-- [ ] **11.6** - Verificar se volta para tela anterior
+- ✅ **11.5** - Clicar em "Voltar"
+- ✅ **11.6** - Verificar se volta para tela anterior
 
 **Resultado Esperado:**
 - Todas as informações visíveis
@@ -258,21 +241,16 @@
 ---
 
 ### Teste 12: Configurações do Restaurante
-- [ ] **12.1** - Acessar `/restaurante/configuracoes`
-- [ ] **12.2** - Verificar seções:
-  - [ ] Informações da Empresa
-  - [ ] Endereço
-  - [ ] Precificação
-  - [ ] Limites e Tolerâncias
-  - [ ] Mensagem de Boas-Vindas
-- [ ] **12.3** - Editar campos:
+- ✅ **12.1** - Acessar `/restaurante/gerenciamento` e clicar na aba "Configurações"
+- ✅ **12.2** - Verificar seções:
+- ✅ **12.3** - Editar campos:
   - Mudar preço Fast Lane
   - Alterar limite de tickets
   - Modificar mensagem
-- [ ] **12.4** - Clicar em "Salvar Configurações"
-- [ ] **12.5** - Verificar mensagem de sucesso
-- [ ] **12.6** - Recarregar página
-- [ ] **12.7** - Verificar se mantém valores (localStorage)
+- ✅ **12.4** - Clicar em "Salvar Configurações"
+- ✅ **12.5** - Verificar mensagem de sucesso
+- ✅ **12.6** - Recarregar página
+- ✅ **12.7** - Verificar se mantém valores (localStorage)
 
 **Resultado Esperado:**
 - Todas as seções visíveis

@@ -29,6 +29,8 @@ function Gerenciamento() {
   ]);
 
   const [mostrarModalOperador, setMostrarModalOperador] = useState(false);
+  const [mostrarModalExcluir, setMostrarModalExcluir] = useState(false);
+  const [membroParaExcluir, setMembroParaExcluir] = useState(null);
   const [novoMembro, setNovoMembro] = useState({
     nome: '',
     email: '',
@@ -45,8 +47,8 @@ function Gerenciamento() {
     capacidade: 50,
     tempoMedioAtendimentoMinutos: 45,
     precoFastlane: 15.00,
-    precoVip: 30.00,
-    maxReentradasPorDia: 2,
+    maxReentradasPorDia: 3,
+    mensagemBoasVindas: 'Bem-vindo à Trattoria Bella Vista! Aguarde ser chamado.',
     horarios: {
       segunda: { aberto: true, inicio: '11:00', fim: '23:00' },
       terca: { aberto: true, inicio: '11:00', fim: '23:00' },
@@ -66,10 +68,22 @@ function Gerenciamento() {
     setMostrarModalOperador(false);
   };
 
-  const removerMembro = (id) => {
-    if (window.confirm('Tem certeza que deseja remover este membro?')) {
-      setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== id));
+  const abrirModalExcluir = (membro) => {
+    setMembroParaExcluir(membro);
+    setMostrarModalExcluir(true);
+  };
+
+  const confirmarExclusao = () => {
+    if (membroParaExcluir) {
+      setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== membroParaExcluir.id));
+      setMostrarModalExcluir(false);
+      setMembroParaExcluir(null);
     }
+  };
+
+  const cancelarExclusao = () => {
+    setMostrarModalExcluir(false);
+    setMembroParaExcluir(null);
   };
 
   const handleSalvarConfiguracoes = (e) => {
@@ -216,7 +230,7 @@ function Gerenciamento() {
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => removerMembro(membro.id)}
+                              onClick={() => abrirModalExcluir(membro)}
                               className="p-2 text-gray-600 hover:text-red-600 transition-colors"
                               title="Remover membro"
                             >
@@ -336,17 +350,19 @@ function Gerenciamento() {
                     placeholder="15.00"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Preço VIP (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={configuracoes.precoVip}
-                    onChange={(e) => setConfiguracoes({...configuracoes, precoVip: parseFloat(e.target.value)})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    placeholder="30.00"
-                  />
-                </div>
+              </div>
+              <div className="mt-5">
+                <label className="block text-sm font-medium text-gray-900 mb-2">Mensagem de Boas-Vindas</label>
+                <textarea
+                  value={configuracoes.mensagemBoasVindas}
+                  onChange={(e) => setConfiguracoes({...configuracoes, mensagemBoasVindas: e.target.value})}
+                  rows="3"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+                  placeholder="Digite a mensagem que será exibida aos clientes ao entrar na fila"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Esta mensagem será exibida aos clientes quando entrarem na fila
+                </p>
               </div>
             </div>
 
@@ -487,6 +503,38 @@ function Gerenciamento() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Confirmar Exclusão */}
+      {mostrarModalExcluir && membroParaExcluir && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 relative">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Remover Membro da Equipe</h3>
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja remover <span className="font-semibold text-gray-900">{membroParaExcluir.nome}</span> da equipe?
+                Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={cancelarExclusao}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarExclusao}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
