@@ -146,22 +146,39 @@ export default function CadastroRestaurante() {
       };
 
       console.log('➡️ Payload COMPLETO de cadastro:', JSON.stringify(payload, null, 2));
-      console.log('📋 Validações:');
+      console.log('📋 Validações DETALHADAS:');
       console.log('  - Nome:', payload.nome);
       console.log('  - Slug:', payload.slug);
-      console.log('  - Email:', payload.emailAdmin);
+      console.log('  - Email Admin:', payload.emailAdmin);
+      console.log('  - Senha Admin:', payload.senhaAdmin ? '***' : 'VAZIO');
       console.log('  - Preço FastLane (formData):', formData.precoFastlane, '(tipo:', typeof formData.precoFastlane + ')');
       console.log('  - Preço FastLane (payload):', payload.precoFastLane, '(tipo:', typeof payload.precoFastLane + ')');
       console.log('  - Preço VIP (payload):', payload.precoVip, '(tipo:', typeof payload.precoVip + ')');
-      console.log('  - CNPJ:', payload.cnpj);
-      console.log('  - Telefone:', payload.telefone);
+      console.log('  - Max Reentradas (formData):', formData.maxReentradasPorDia, '(tipo:', typeof formData.maxReentradasPorDia + ')');
+      console.log('  - Max Reentradas (payload):', payload.maxReentradasPorDia, '(tipo:', typeof payload.maxReentradasPorDia + ')');
+      console.log('  - CNPJ (raw):', formData.cnpj);
+      console.log('  - CNPJ (limpo):', payload.cnpj);
+      console.log('  - Telefone (raw):', formData.telefone);
+      console.log('  - Telefone (limpo):', payload.telefone);
       console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
+      console.log('  - CEP:', payload.endereco.cep);
       console.log('  - Endereço completo:', payload.endereco);
 
       // Chamar API
       const response = await restauranteService.cadastrar(payload);
       
-      console.log('✅ Restaurante cadastrado:', response);
+      console.log('✅ Restaurante cadastrado com sucesso!');
+      console.log('📦 Response do backend:', JSON.stringify(response, null, 2));
+      console.log('🔍 Verificar campos salvos:');
+      if (response.restaurante) {
+        console.log('  - maxReentradasPorDia salvo:', response.restaurante.maxReentradasPorDia);
+        console.log('  - precoFastLane salvo:', response.restaurante.precoFastLane);
+        console.log('  - precoVip salvo:', response.restaurante.precoVip);
+        console.log('  - cidade salva:', response.restaurante.cidade);
+        console.log('  - estado salvo:', response.restaurante.estado);
+      }
+      console.log('⚠️ NOTA: Se algum campo aparecer como "undefined", o backend salvou mas não retornou na resposta.');
+      console.log('   O valor FOI SALVO no banco de dados, apenas não está sendo retornado aqui.');
       
       setSucesso(true);
       

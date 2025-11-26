@@ -57,12 +57,27 @@ export default function AcompanharFila() {
   const carregarTicket = async () => {
     try {
       // Buscar ticket ativo da API
+      console.log('🔍 Buscando ticket do cliente autenticado...');
+      console.log('🔑 Token no localStorage:', localStorage.getItem('token') ? 'Presente' : 'AUSENTE');
+      
       const response = await clienteService.buscarMeuTicket();
+      
+      console.log('✅ Ticket carregado - Response completa:', JSON.stringify(response, null, 2));
+      console.log('📦 Estrutura do response:', {
+        temTicket: !!response.ticket,
+        temMessage: !!response.message,
+        keys: Object.keys(response),
+        ticket: response.ticket ? Object.keys(response.ticket) : 'null'
+      });
+      
       setTicket(response.ticket || response);
       setErro('');
-      console.log('✅ Ticket carregado:', response);
+      
+      console.log('👤 Cliente do ticket:', response?.clienteId || response?.ticket?.clienteId);
+      console.log('🏪 Restaurante:', response?.restaurante?.nome || response?.ticket?.restaurante?.nome);
     } catch (error) {
-      console.error('Erro ao buscar ticket:', error);
+      console.error('❌ Erro ao buscar ticket:', error);
+      console.error('📄 Response error:', error.response?.data);
       setErro('Você não possui tickets ativos no momento.');
       setTicket(null);
     } finally {
@@ -279,12 +294,12 @@ export default function AcompanharFila() {
         <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 text-center">
           <p className="text-sm text-gray-600 mb-2">Sua Posição na Fila</p>
           <div className="text-7xl font-bold text-orange-600 mb-3">
-            {ticket?.posicaoAtual}º
+            {ticket?.posicao}º
           </div>
           <div className="flex items-center justify-center gap-2 text-orange-700">
             <Clock size={16} />
             <span className="text-sm font-medium">
-              Tempo estimado: {ticket?.tempoEstimadoMinutos || 15} min
+              Tempo estimado: {ticket?.tempoEstimado || 15} min
             </span>
           </div>
         </div>
@@ -296,7 +311,7 @@ export default function AcompanharFila() {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Número do Ticket</span>
-              <span className="text-sm font-semibold text-gray-900">TKT-{ticket?.numero}</span>
+              <span className="text-sm font-semibold text-gray-900">{ticket?.numeroTicket}</span>
             </div>
             
             <div className="flex justify-between items-center">

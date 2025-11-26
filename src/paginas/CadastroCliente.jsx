@@ -33,6 +33,13 @@ export default function CadastroCliente() {
     setLoading(true);
 
     try {
+      // Validações no frontend
+      if (formData.senha.length < 8) {
+        setErro('Senha deve ter no mínimo 8 caracteres');
+        setLoading(false);
+        return;
+      }
+
       // Integração com backend
       const payload = {
         nomeCompleto: formData.nome, // Backend espera 'nomeCompleto'
@@ -45,6 +52,13 @@ export default function CadastroCliente() {
       };
       
       console.log('➡️ Payload de cadastro cliente:', payload);
+      console.log('📋 Validações:');
+      console.log('  - Nome:', payload.nomeCompleto);
+      console.log('  - Email:', payload.email);
+      console.log('  - Senha (tamanho):', payload.senha.length, 'caracteres');
+      console.log('  - CPF:', payload.cpf);
+      console.log('  - Telefone:', payload.telefone);
+      console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
       
       const response = await clienteService.cadastrar(payload);
       const { token, cliente } = response;
@@ -55,12 +69,24 @@ export default function CadastroCliente() {
       setTimeout(() => navigate('/cliente/restaurantes'), 1500);
       
     } catch (error) {
-      console.error('Erro ao cadastrar:', error);
-      setErro(
-        error.response?.data?.message ||
-        error.message || 
-        'Erro ao criar conta. Verifique os dados e tente novamente.'
-      );
+      console.error('❌ Erro ao cadastrar:', error);
+      console.error('❌ Response:', error.response?.data);
+      
+      // Extrair mensagem de erro
+      let mensagem = 'Erro ao criar conta. Verifique os dados e tente novamente.';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        if (typeof data === 'string') {
+          mensagem = data;
+        } else if (data.message) {
+          mensagem = data.message;
+        } else if (data.errors && Array.isArray(data.errors)) {
+          mensagem = data.errors.map(e => e.message).join(', ');
+        }
+      }
+      
+      setErro(mensagem);
     } finally {
       setLoading(false);
     }
@@ -206,13 +232,16 @@ export default function CadastroCliente() {
                 id="senha"
                 name="senha"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Mínimo 8 caracteres"
                 value={formData.senha}
                 onChange={handleChange}
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Mínimo de 8 caracteres
+              </p>
             </div>
 
             {/* Cidade */}

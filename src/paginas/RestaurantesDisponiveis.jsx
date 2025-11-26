@@ -57,17 +57,17 @@ export default function RestaurantesDisponiveis() {
         setRestaurantes([]);
       }
 
-      // Verificar se tem ticket ativo no localStorage
-      const ticketLocal = localStorage.getItem('ticketAtivo');
-      if (ticketLocal) {
-        try {
-          const ticketData = JSON.parse(ticketLocal);
-          setTicketAtivo(ticketData);
-          console.log('✅ Ticket ativo encontrado:', ticketData);
-        } catch (error) {
-          console.error('Erro ao ler ticket do localStorage:', error);
-          localStorage.removeItem('ticketAtivo');
+      // Verificar se tem ticket ativo no backend
+      try {
+        const responseTicket = await clienteService.buscarMeuTicket();
+        if (responseTicket.ticket) {
+          setTicketAtivo(responseTicket.ticket);
+          console.log('✅ Ticket ativo encontrado no backend:', responseTicket.ticket);
         }
+      } catch (error) {
+        // Não tem ticket ativo, isso é normal
+        console.log('ℹ️ Nenhum ticket ativo encontrado');
+        setTicketAtivo(null);
       }
     } catch (error) {
       console.error('❌ Erro geral ao carregar dados:', error);
@@ -115,15 +115,27 @@ export default function RestaurantesDisponiveis() {
 
     try {
       // Integração com backend
-      const response = await clienteService.entrarNaFila(restauranteSelecionado.slug, {
+      const payload = {
         quantidadePessoas,
         prioridade: prioridadeSelecionada,
         observacoes
+      };
+      
+      console.log('📤 Enviando para fila:', {
+        slug: restauranteSelecionado.slug,
+        payload: payload
       });
       
+      const response = await clienteService.entrarNaFila(restauranteSelecionado.slug, payload);
+      
       const { ticket } = response;
-      localStorage.setItem('ticketAtivo', JSON.stringify(ticket));
-      console.log('✅ Ticket criado:', ticket);
+      console.log('✅ Ticket criado - Response completa:', JSON.stringify(response, null, 2));
+      console.log('📋 Campos do ticket:', {
+        quantidadePessoas: ticket?.quantidadePessoas,
+        observacoes: ticket?.observacoes,
+        prioridade: ticket?.prioridade
+      });
+      
       navigate('/cliente/meu-ticket');
     } catch (error) {
       console.error('Erro ao entrar na fila:', error);
@@ -224,7 +236,7 @@ export default function RestaurantesDisponiveis() {
               <div>
                 <h3 className="font-semibold text-gray-900">Você está na fila!</h3>
                 <p className="text-sm text-gray-600">
-                  {ticketAtivo.restaurante?.nome} • Posição: {ticketAtivo.posicaoAtual}º • Aguardando
+                  {ticketAtivo.restaurante?.nome} • Posição: {ticketAtivo.posicao}º • Aguardando
                 </p>
               </div>
             </div>
