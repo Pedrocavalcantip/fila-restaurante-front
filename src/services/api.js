@@ -14,8 +14,27 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log(`📤 ${config.method.toUpperCase()} ${config.url}`, config.data || '');
   return config;
 });
+
+// Interceptor de resposta para logs de erro
+api.interceptors.response.use(
+  (response) => {
+    console.log(`✅ ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response.status}`, error.response.data);
+    } else if (error.request) {
+      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - Sem resposta do servidor`, error.message);
+    } else {
+      console.error('❌ Erro na requisição:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ==========================================
 // 🏢 RESTAURANTE - Cadastro e Gestão
@@ -93,9 +112,10 @@ export const clienteService = {
 
   /**
    * Buscar histórico de tickets do cliente
+   * Retorna todos os tickets (ativo + histórico)
    */
   buscarHistoricoTickets: async () => {
-    const response = await api.get('/cliente/tickets/historico');
+    const response = await api.get('/cliente/meu-ticket');
     return response.data;
   },
 

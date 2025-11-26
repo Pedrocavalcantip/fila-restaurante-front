@@ -127,22 +127,12 @@ export default function CadastroRestaurante() {
         slug: formData.slug.trim(),
         emailAdmin: formData.emailAdmin.trim(),
         senhaAdmin: formData.senhaAdmin,
-        precoFastLane: Number(formData.precoFastlane), // Backend usa 'precoFastLane' com L maiúsculo
+        precoFastlane: Number(formData.precoFastlane),
         precoVip: Number(formData.precoFastlane), // Usar mesmo valor do FastLane
         maxReentradasPorDia: Number(formData.maxReentradasPorDia),
-        cnpj: formData.cnpj.replace(/\D/g, ''),
         telefone: formData.telefone.replace(/\D/g, ''),
         cidade: formData.cidade.trim(),
-        estado: formData.estado,
-        endereco: {
-          cep: formData.cep.replace(/\D/g, ''),
-          rua: formData.rua.trim(),
-          numero: formData.numero.trim(),
-          bairro: formData.bairro.trim(),
-          cidade: formData.cidade.trim(),
-          estado: formData.estado,
-          complemento: ''
-        }
+        estado: formData.estado
       };
 
       console.log('➡️ Payload COMPLETO de cadastro:', JSON.stringify(payload, null, 2));
@@ -151,18 +141,13 @@ export default function CadastroRestaurante() {
       console.log('  - Slug:', payload.slug);
       console.log('  - Email Admin:', payload.emailAdmin);
       console.log('  - Senha Admin:', payload.senhaAdmin ? '***' : 'VAZIO');
-      console.log('  - Preço FastLane (formData):', formData.precoFastlane, '(tipo:', typeof formData.precoFastlane + ')');
-      console.log('  - Preço FastLane (payload):', payload.precoFastLane, '(tipo:', typeof payload.precoFastLane + ')');
+      console.log('  - Preço Fastlane (formData):', formData.precoFastlane, '(tipo:', typeof formData.precoFastlane + ')');
+      console.log('  - Preço Fastlane (payload):', payload.precoFastlane, '(tipo:', typeof payload.precoFastlane + ')');
       console.log('  - Preço VIP (payload):', payload.precoVip, '(tipo:', typeof payload.precoVip + ')');
       console.log('  - Max Reentradas (formData):', formData.maxReentradasPorDia, '(tipo:', typeof formData.maxReentradasPorDia + ')');
       console.log('  - Max Reentradas (payload):', payload.maxReentradasPorDia, '(tipo:', typeof payload.maxReentradasPorDia + ')');
-      console.log('  - CNPJ (raw):', formData.cnpj);
-      console.log('  - CNPJ (limpo):', payload.cnpj);
-      console.log('  - Telefone (raw):', formData.telefone);
       console.log('  - Telefone (limpo):', payload.telefone);
       console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
-      console.log('  - CEP:', payload.endereco.cep);
-      console.log('  - Endereço completo:', payload.endereco);
 
       // Chamar API
       const response = await restauranteService.cadastrar(payload);
@@ -172,7 +157,7 @@ export default function CadastroRestaurante() {
       console.log('🔍 Verificar campos salvos:');
       if (response.restaurante) {
         console.log('  - maxReentradasPorDia salvo:', response.restaurante.maxReentradasPorDia);
-        console.log('  - precoFastLane salvo:', response.restaurante.precoFastLane);
+        console.log('  - precoFastlane salvo:', response.restaurante.precoFastlane);
         console.log('  - precoVip salvo:', response.restaurante.precoVip);
         console.log('  - cidade salva:', response.restaurante.cidade);
         console.log('  - estado salvo:', response.restaurante.estado);

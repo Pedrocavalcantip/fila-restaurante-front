@@ -85,7 +85,7 @@ function Gerenciamento() {
         telefone: rest.telefone || '',
         endereco: enderecoCompleto,
         capacidade: rest.maxTicketsPorHora || 50, // Backend usa maxTicketsPorHora
-        precoFastlane: rest.precoFastLane || 15.00,
+        precoFastlane: rest.precoFastlane || 15.00,
         maxReentradasPorDia: rest.maxReentradasPorDia || 3,
         mensagemBoasVindas: rest.mensagemBoasVindas || '',
         horarios: horariosParsed
@@ -100,12 +100,29 @@ function Gerenciamento() {
     }
   };
 
-  const handleAdicionarMembro = (e) => {
+  const handleAdicionarMembro = async (e) => {
     e.preventDefault();
-    const novoId = Math.max(...membrosEquipe.map(m => m.id)) + 1;
-    setMembrosEquipe([...membrosEquipe, { ...novoMembro, id: novoId }]);
-    setNovoMembro({ nome: '', email: '', senha: '', role: 'OPERADOR' });
-    setMostrarModalOperador(false);
+    
+    try {
+      console.log('➡️ Tentando criar operador:', novoMembro);
+      
+      // TODO: Integrar com API para criar operador
+      // await restauranteService.criarOperador(novoMembro);
+      
+      console.warn('⚠️ MOCK: Operador NÃO foi salvo no banco de dados');
+      console.warn('⚠️ Endpoint de criar operador ainda não implementado no frontend');
+      
+      // Temporariamente adiciona ao estado local (apenas visual)
+      const novoId = Date.now();
+      setMembrosEquipe([...membrosEquipe, { ...novoMembro, id: novoId }]);
+      setNovoMembro({ nome: '', email: '', senha: '', role: 'OPERADOR' });
+      setMostrarModalOperador(false);
+      
+      alert('⚠️ ATENÇÃO: Este operador foi adicionado apenas localmente.\nA integração com o backend ainda precisa ser implementada.');
+    } catch (error) {
+      console.error('❌ Erro ao criar operador:', error);
+      alert('Erro ao criar operador. Tente novamente.');
+    }
   };
 
   const abrirModalExcluir = (membro) => {
@@ -133,7 +150,7 @@ function Gerenciamento() {
         nome: configuracoes.nome,
         telefone: configuracoes.telefone,
         maxTicketsPorHora: configuracoes.capacidade, // Frontend usa 'capacidade', backend usa 'maxTicketsPorHora'
-        precoFastLane: configuracoes.precoFastlane,
+        precoFastlane: configuracoes.precoFastlane,
         maxReentradasPorDia: configuracoes.maxReentradasPorDia,
         mensagemBoasVindas: configuracoes.mensagemBoasVindas,
         horariosFuncionamento: configuracoes.horarios // Envia objeto de horários

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { X, AlertCircle, Flame } from 'lucide-react';
+import { clienteService } from '../services/api';
 
 export default function EntrarNaFila() {
   const { slug } = useParams();
@@ -24,31 +25,24 @@ export default function EntrarNaFila() {
     setLoading(true);
 
     try {
-      // TODO: Integrar com API POST /cliente/restaurantes/{slug}/fila/entrar
-      // Body: { quantidadePessoas, prioridade, observacoes }
-      const ticketMock = {
-        id: 'ticket-' + Date.now(),
-        numero: Math.floor(Math.random() * 9000) + 1000,
-        status: 'AGUARDANDO',
-        prioridade: prioridadeInicial,
-        posicaoAtual: prioridadeInicial === 'FAST_LANE' ? 2 : 8,
+      const payload = {
         quantidadePessoas: quantidadePessoas,
-        tempoEstimadoMinutos: prioridadeInicial === 'FAST_LANE' ? 10 : 25,
-        observacoes: observacoes,
-        restaurante: restaurante || {
-          nome: 'Restaurante',
-          slug: slug
-        }
+        prioridade: prioridadeInicial,
+        observacoes: observacoes || undefined // Enviar apenas se preenchido
       };
 
-      // Salvar no localStorage para simular
-      localStorage.setItem('ticketAtivo', JSON.stringify(ticketMock));
-
+      console.log('📤 Entrando na fila:', { slug, payload });
+      
+      const response = await clienteService.entrarNaFila(slug, payload);
+      
+      console.log('✅ Ticket criado:', response);
+      
       // Redirecionar para acompanhar fila
       navigate('/cliente/meu-ticket');
     } catch (error) {
-      console.error('Erro ao entrar na fila:', error);
-      setErro('Erro ao entrar na fila. Tente novamente.');
+      console.error('❌ Erro ao entrar na fila:', error);
+      const mensagem = error.response?.data?.message || 'Erro ao entrar na fila. Tente novamente.';
+      setErro(mensagem);
     } finally {
       setLoading(false);
     }

@@ -246,7 +246,7 @@ export default function HistoricoClienteTickets() {
                   <div className="text-right">
                     <p className="font-mono text-lg font-bold text-gray-900">#{ticket.numero}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}
+                      {new Date(ticket.createdAt).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </div>

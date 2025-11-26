@@ -357,7 +357,7 @@ export default function RestaurantesDisponiveis() {
                   <div className="flex items-center justify-between mb-1">
                     <p className="text-sm font-medium text-gray-900">Valor Fast Lane</p>
                     <p className="text-lg font-bold text-orange-600">
-                      R$ {Number(restauranteSelecionado.precoFastlane || restauranteSelecionado.precoFastLane || 15).toFixed(2)}
+                      R$ {Number(restauranteSelecionado.precoFastlane || 15).toFixed(2)}
                     </p>
                   </div>
                   <p className="text-xs text-gray-600">
@@ -434,11 +434,7 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
     filas: filas.length,
     tamanhoFila,
     tempoEstimado,
-    precos: {
-      precoFastlane: restaurante.precoFastlane,
-      precoFastLane: restaurante.precoFastLane,
-      tipo: typeof restaurante.precoFastlane
-    },
+    precoFastlane: restaurante.precoFastlane,
     estrutura: {
       temFilas: !!restaurante.filas,
       temFilaAtiva: !!restaurante.filaAtiva,

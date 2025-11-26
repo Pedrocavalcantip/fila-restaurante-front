@@ -30,7 +30,7 @@ export default function PerfilCliente() {
       
       setCliente(clienteData);
       setFormData({
-        nome: clienteData.nomeCompleto || clienteData.nome || '',
+        nome: clienteData.nome || '',
         email: clienteData.email || '',
         telefone: clienteData.telefone || '',
         cpf: clienteData.cpf || '',
@@ -54,7 +54,7 @@ export default function PerfilCliente() {
     try {
       // Atualizar perfil no backend
       const payload = {
-        nomeCompleto: formData.nome,
+        nome: formData.nome,
         telefone: formData.telefone,
         cidade: formData.cidade,
         estado: formData.estado

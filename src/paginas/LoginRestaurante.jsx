@@ -36,7 +36,8 @@ export default function LoginRestaurante() {
         localStorage.setItem('filaAtivaId', usuario.restaurante.filaAtiva.id);
         console.log('✅ FilaId salvo:', usuario.restaurante.filaAtiva.id);
       } else {
-        console.warn('⚠️ AVISO: filaAtiva.id não encontrado na resposta do backend');
+        // Backend não retorna filaId no login, será buscado depois via buscarMeuRestaurante()
+        console.log('ℹ️ FilaId será carregado posteriormente');
       }
 
       console.log('✅ Login realizado com sucesso:', usuario);

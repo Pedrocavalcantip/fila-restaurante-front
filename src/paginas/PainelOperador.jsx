@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ticketService } from '../services/api';
+import { ticketService, restauranteService } from '../services/api';
 
 function PainelOperador() {
   const navigate = useNavigate();
@@ -37,21 +37,54 @@ function PainelOperador() {
   const carregarFila = async () => {
     setLoading(true);
     try {
-      // Integração com backend
-      const filaId = localStorage.getItem('filaAtivaId');
+      // Tentar obter filaId do localStorage
+      let filaId = localStorage.getItem('filaAtivaId');
+      
+      // Se não tiver filaId, buscar do backend
       if (!filaId) {
-        console.error('❌ ERRO: filaId não encontrado no localStorage');
-        console.log('💡 Certifique-se de que o login salvou o filaId');
-        return;
+        console.warn('⚠️ filaId não encontrado no localStorage. Buscando dados do restaurante...');
+        try {
+          const restauranteSlug = localStorage.getItem('restauranteSlug');
+          if (!restauranteSlug) {
+            console.error('❌ ERRO: restauranteSlug também não encontrado');
+            setErro('Erro ao carregar dados do restaurante. Faça login novamente.');
+            return;
+          }
+          
+          // Buscar dados do restaurante para obter o filaId
+          const responseRestaurante = await restauranteService.buscarMeuRestaurante();
+          console.log('📦 Dados do restaurante:', responseRestaurante);
+          
+          if (responseRestaurante.restaurante?.filas?.[0]?.id) {
+            filaId = responseRestaurante.restaurante.filas[0].id;
+            localStorage.setItem('filaAtivaId', filaId);
+            console.log('✅ FilaId obtido do restaurante:', filaId);
+          } else {
+            console.error('❌ ERRO: Restaurante não possui filas');
+            setErro('Restaurante sem filas cadastradas. Entre em contato com o suporte.');
+            return;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao buscar dados do restaurante:', error);
+          setErro('Erro ao carregar dados. Faça login novamente.');
+          return;
+        }
       }
+      
       console.log('🔍 Carregando fila:', filaId);
       const response = await ticketService.listarFilaAtiva(filaId);
       setFilaData(response.fila);
       setTickets(response.tickets || []);
       setEstatisticas(response.estatisticas);
       console.log('✅ Fila carregada:', response);
+      console.log('📋 Primeiro ticket (estrutura):', response.tickets?.[0] ? Object.keys(response.tickets[0]) : 'Nenhum ticket');
+      console.log('🔍 Campos de data:', {
+        createdAt: response.tickets?.[0]?.createdAt,
+        updatedAt: response.tickets?.[0]?.updatedAt
+      });
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
+      setErro('Erro ao carregar fila. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -189,8 +222,8 @@ function PainelOperador() {
     return tel;
   };
 
-  const formatarTempoEspera = (criadoEm) => {
-    const minutos = Math.floor((Date.now() - new Date(criadoEm)) / 60000);
+  const formatarTempoEspera = (createdAt) => {
+    const minutos = Math.floor((Date.now() - new Date(createdAt)) / 60000);
     return `${minutos} min`;
   };
 
@@ -409,11 +442,11 @@ function PainelOperador() {
                             <Clock className="w-4 h-4 text-orange-500" />
                             {ticket.status === 'CHAMADO' ? (
                               <span className="font-semibold text-green-600">
-                                Chamado há {formatarTempoEspera(ticket.criadoEm)}
+                                Chamado há {formatarTempoEspera(ticket.createdAt)}
                               </span>
                             ) : (
                               <span className="font-semibold text-orange-600">
-                                Aguardando {formatarTempoEspera(ticket.criadoEm)}
+                                Aguardando {formatarTempoEspera(ticket.createdAt)}
                               </span>
                             )}
                           </div>
@@ -535,7 +568,7 @@ function PainelOperador() {
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4">
                   <p className="text-xs text-blue-600 font-medium mb-1">Tempo de Espera</p>
-                  <p className="text-3xl font-bold text-blue-600">{formatarTempoEspera(ticketSelecionado.criadoEm)}</p>
+                  <p className="text-3xl font-bold text-blue-600">{formatarTempoEspera(ticketSelecionado.createdAt)}</p>
                 </div>
               </div>
 
@@ -617,7 +650,7 @@ function PainelOperador() {
                     <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">Ticket Criado</p>
-                      <p className="text-xs text-gray-600">{formatarDataHora(ticketSelecionado.criadoEm)}</p>
+                      <p className="text-xs text-gray-600">{formatarDataHora(ticketSelecionado.createdAt)}</p>
                     </div>
                   </div>
                   {ticketSelecionado.status === 'CHAMADO' && (

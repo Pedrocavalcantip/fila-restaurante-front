@@ -28,7 +28,7 @@ export default function DetalhesTicket() {
         prioridade: 'FAST_LANE',
         posicao: null,
         tempoEstimadoMinutos: null,
-        criadoEm: '2025-01-15T18:30:00Z',
+        createdAt: '2025-01-15T18:30:00Z',
         chamadoEm: '2025-01-15T19:15:00Z',
         finalizadoEm: '2025-01-15T19:30:00Z',
         canceladoEm: null,
@@ -51,21 +51,21 @@ export default function DetalhesTicket() {
             id: 1,
             acao: 'CRIADO',
             detalhes: 'Ticket criado pelo cliente',
-            criadoEm: '2025-01-15T18:30:00Z',
+            createdAt: '2025-01-15T18:30:00Z',
             operador: null
           },
           {
             id: 2,
             acao: 'PAGAMENTO_CONFIRMADO',
             detalhes: 'Pagamento Fast Lane confirmado - R$ 15,00',
-            criadoEm: '2025-01-15T18:31:00Z',
+            createdAt: '2025-01-15T18:31:00Z',
             operador: null
           },
           {
             id: 3,
             acao: 'CHAMADO',
             detalhes: 'Cliente chamado para atendimento',
-            criadoEm: '2025-01-15T19:15:00Z',
+            createdAt: '2025-01-15T19:15:00Z',
             operador: {
               nome: 'João Operador',
               email: 'joao@restaurante.com'
@@ -75,7 +75,7 @@ export default function DetalhesTicket() {
             id: 4,
             acao: 'FINALIZADO',
             detalhes: 'Cliente atendido com sucesso',
-            criadoEm: '2025-01-15T19:30:00Z',
+            createdAt: '2025-01-15T19:30:00Z',
             operador: {
               nome: 'João Operador',
               email: 'joao@restaurante.com'
@@ -277,7 +277,7 @@ export default function DetalhesTicket() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Criado em</p>
-                  <p className="font-medium text-gray-900">{formatarData(ticket.criadoEm)}</p>
+                  <p className="font-medium text-gray-900">{formatarData(ticket.createdAt)}</p>
                 </div>
               </div>
 
@@ -376,7 +376,7 @@ export default function DetalhesTicket() {
                        log.acao === 'PAGAMENTO_CONFIRMADO' ? 'Pagamento Confirmado' : log.acao}
                     </h4>
                     <span className="text-sm text-gray-500">
-                      {formatarData(log.criadoEm)}
+                      {formatarData(log.createdAt)}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{log.detalhes}</p>

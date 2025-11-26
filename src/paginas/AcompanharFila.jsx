@@ -35,20 +35,23 @@ export default function AcompanharFila() {
   const carregarHistorico = async () => {
     try {
       setLoadingHistorico(true);
-      // Integrar com API do cliente para buscar histórico
-      console.log('ℹ️ Carregando histórico de tickets do cliente...');
+      console.log('ℹ️ Carregando histórico de tickets...');
       
-      try {
-        const response = await clienteService.buscarHistoricoTickets();
-        setHistorico(response.tickets || response);
-        console.log('✅ Histórico carregado:', response);
-      } catch (error) {
-        // Se o endpoint ainda não existir no backend, mostrar array vazio
-        console.warn('⚠️ Endpoint de histórico ainda não implementado no backend');
-        setHistorico([]);
-      }
+      const response = await clienteService.buscarMeuTicket();
+      
+      // O endpoint /cliente/meu-ticket retorna { tickets: [...] }
+      const todosTickets = response.tickets || [];
+      
+      // Filtrar apenas tickets finalizados/cancelados/no-show para o histórico
+      const ticketsHistorico = todosTickets.filter(t => 
+        ['FINALIZADO', 'CANCELADO', 'NO_SHOW'].includes(t.status)
+      );
+      
+      setHistorico(ticketsHistorico);
+      console.log('✅ Histórico carregado:', ticketsHistorico.length, 'tickets');
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
+      console.error('❌ Erro ao carregar histórico:', error);
+      setHistorico([]);
     } finally {
       setLoadingHistorico(false);
     }
@@ -58,7 +61,6 @@ export default function AcompanharFila() {
     try {
       // Buscar ticket ativo da API
       console.log('🔍 Buscando ticket do cliente autenticado...');
-      console.log('🔑 Token no localStorage:', localStorage.getItem('token') ? 'Presente' : 'AUSENTE');
       
       const response = await clienteService.buscarMeuTicket();
       
@@ -70,11 +72,19 @@ export default function AcompanharFila() {
         ticket: response.ticket ? Object.keys(response.ticket) : 'null'
       });
       
-      setTicket(response.ticket || response);
-      setErro('');
+      // VERIFICAR CAMPOS RETORNADOS PELO BACKEND
+      const ticket = response.ticket || response;
+      console.log('🔍 VERIFICAÇÃO DE CAMPOS:');
+      console.log('  ✓ numero:', ticket?.numero);
+      console.log('  ✓ posicao:', ticket?.posicao);
+      console.log('  ✓ tempoEstimadoMinutos:', ticket?.tempoEstimadoMinutos);
+      console.log('  ✓ quantidadePessoas:', ticket?.quantidadePessoas);
+      console.log('  ⚠️ observacoes:', ticket?.observacoes, '← Backend não retorna este campo');
+      console.log('  ✓ prioridade:', ticket?.prioridade);
+      console.log('  ✓ status:', ticket?.status);
       
-      console.log('👤 Cliente do ticket:', response?.clienteId || response?.ticket?.clienteId);
-      console.log('🏪 Restaurante:', response?.restaurante?.nome || response?.ticket?.restaurante?.nome);
+      setTicket(ticket);
+      setErro('');
     } catch (error) {
       console.error('❌ Erro ao buscar ticket:', error);
       console.error('📄 Response error:', error.response?.data);
@@ -299,7 +309,7 @@ export default function AcompanharFila() {
           <div className="flex items-center justify-center gap-2 text-orange-700">
             <Clock size={16} />
             <span className="text-sm font-medium">
-              Tempo estimado: {ticket?.tempoEstimado || 15} min
+              Tempo estimado: {ticket?.tempoEstimadoMinutos || 15} min
             </span>
           </div>
         </div>
@@ -311,7 +321,7 @@ export default function AcompanharFila() {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Número do Ticket</span>
-              <span className="text-sm font-semibold text-gray-900">{ticket?.numeroTicket}</span>
+              <span className="text-sm font-semibold text-gray-900">{ticket?.numero}</span>
             </div>
             
             <div className="flex justify-between items-center">
@@ -325,7 +335,7 @@ export default function AcompanharFila() {
               <span className="text-sm text-gray-600">Tamanho do Grupo</span>
               <div className="flex items-center gap-1 text-sm font-semibold text-gray-900">
                 <Users size={16} />
-                {ticket?.quantidadePessoas || 4} pessoas
+                {ticket?.quantidadePessoas ?? 1} {ticket?.quantidadePessoas === 1 ? 'pessoa' : 'pessoas'}
               </div>
             </div>
 
@@ -350,8 +360,8 @@ export default function AcompanharFila() {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">Ticket Confirmado</p>
-                {ticket?.criadoEm && (
-                  <p className="text-xs text-gray-500">{formatarHora(ticket.criadoEm)}</p>
+                {ticket?.createdAt && (
+                  <p className="text-xs text-gray-500">{formatarHora(ticket.createdAt)}</p>
                 )}
               </div>
             </div>
@@ -367,20 +377,20 @@ export default function AcompanharFila() {
               </div>
             </div>
 
-            {/* Chamado - Completo apenas se status for CHAMADO */}
+            {/* Chamado - Completo se status for CHAMADO, ATENDENDO ou FINALIZADO */}
             <div className="flex items-start gap-3">
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO'
+                ['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
                   ? 'bg-orange-600 border-orange-600'
                   : 'border-orange-300'
               }`}>
-                {(ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO') && (
+                {['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status) && (
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
               <div className="flex-1">
                 <p className={`text-sm font-medium ${
-                  ticket?.status === 'CHAMADO' || ticket?.status === 'FINALIZADO'
+                  ['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
                     ? 'text-orange-600'
                     : 'text-gray-400'
                 }`}>
@@ -398,20 +408,23 @@ export default function AcompanharFila() {
             {/* Mesa Pronta / Finalizado */}
             <div className="flex items-start gap-3">
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                ticket?.status === 'FINALIZADO'
+                ['ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
                   ? 'bg-green-600 border-green-600'
                   : 'border-gray-200'
               }`}>
-                {ticket?.status === 'FINALIZADO' && (
+                {['ATENDENDO', 'FINALIZADO'].includes(ticket?.status) && (
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
               <div className="flex-1">
                 <p className={`text-sm font-medium ${
-                  ticket?.status === 'FINALIZADO' ? 'text-green-600' : 'text-gray-400'
+                  ['ATENDENDO', 'FINALIZADO'].includes(ticket?.status) ? 'text-green-600' : 'text-gray-400'
                 }`}>
                   Mesa Pronta
                 </p>
+                {ticket?.status === 'ATENDENDO' && (
+                  <p className="text-xs text-green-600 font-medium">Aproveite sua refeição!</p>
+                )}
               </div>
             </div>
           </div>
@@ -531,11 +544,13 @@ export default function AcompanharFila() {
                 <div key={ticket.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{ticket.restaurante.nome}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                        <MapPin size={14} />
-                        <span>{ticket.restaurante.endereco}</span>
-                      </div>
+                      <h3 className="text-lg font-bold text-gray-900">{ticket.restaurante?.nome || 'Restaurante'}</h3>
+                      {ticket.restaurante?.endereco && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                          <MapPin size={14} />
+                          <span>{ticket.restaurante.endereco}</span>
+                        </div>
+                      )}
                     </div>
                     {getStatusBadge(ticket.status)}
                   </div>
@@ -543,7 +558,7 @@ export default function AcompanharFila() {
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
                       <span className="text-xs text-gray-500">Ticket</span>
-                      <p className="text-sm font-semibold text-gray-900">TKT-{ticket.numero}</p>
+                      <p className="text-sm font-semibold text-gray-900">{ticket.numero}</p>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Prioridade</span>
@@ -553,18 +568,18 @@ export default function AcompanharFila() {
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Pessoas</span>
-                      <p className="text-sm font-medium text-gray-900">{ticket.quantidadePessoas}</p>
+                      <p className="text-sm font-medium text-gray-900">{ticket.quantidadePessoas || '-'}</p>
                     </div>
                     <div>
                       <span className="text-xs text-gray-500">Data</span>
-                      <p className="text-sm font-medium text-gray-900">{formatarData(ticket.criadoEm)}</p>
+                      <p className="text-sm font-medium text-gray-900">{formatarData(ticket.createdAt)}</p>
                     </div>
                   </div>
 
                   <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
                     <div className="flex items-center gap-4">
                       <span>
-                        Entrada: {formatarHora(ticket.criadoEm)}
+                        Entrada: {formatarHora(ticket.createdAt)}
                       </span>
                       {ticket.finalizadoEm && (
                         <>
@@ -574,7 +589,7 @@ export default function AcompanharFila() {
                           </span>
                           <span>•</span>
                           <span className="font-medium text-orange-600">
-                            Duração: {calcularTempoTotal(ticket.criadoEm, ticket.finalizadoEm)} min
+                            Duração: {calcularTempoTotal(ticket.createdAt, ticket.finalizadoEm)} min
                           </span>
                         </>
                       )}

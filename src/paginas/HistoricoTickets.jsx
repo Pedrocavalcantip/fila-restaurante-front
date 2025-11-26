@@ -227,7 +227,7 @@ export default function HistoricoTickets() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(ticket.criadoEm).toLocaleDateString('pt-BR')}
+                        {new Date(ticket.createdAt).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <button
