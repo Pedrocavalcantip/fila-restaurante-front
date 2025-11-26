@@ -1,10 +1,9 @@
 import axios from 'axios';
 
-// Cria a instância do Axios apontando para a sua API
+// Instância Axios apontando diretamente para o backend em dev
+// Em produção, prefira usar variável de ambiente (ex: import.meta.env.VITE_API_URL)
 const api = axios.create({
-  // Em desenvolvimento usamos proxy do Vite — aponta para /api/v1
-  // Em produção, ajuste para o URL real do backend (ex: https://api.seusite.com/api/v1)
-  baseURL: '/api/v1',
+  baseURL: 'http://localhost:3000',
 });
 
 // Adiciona o Token automaticamente em rotas privadas
