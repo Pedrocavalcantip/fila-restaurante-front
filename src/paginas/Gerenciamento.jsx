@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, UserPlus, Trash2, User, Settings, DollarSign, Clock } from 'lucide-react';
+import { ArrowLeft, UserPlus, Trash2, User, Settings, DollarSign, Clock, Building2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { restauranteService } from '../services/api';
 
@@ -7,6 +7,10 @@ function Gerenciamento() {
   const navigate = useNavigate();
   const [abaAtiva, setAbaAtiva] = useState('equipe'); // 'equipe' ou 'configuracoes'
   const [loading, setLoading] = useState(true);
+  
+  // Estados para upload de imagem
+  const [imagemFile, setImagemFile] = useState(null);
+  const [imagemPreview, setImagemPreview] = useState(null);
   
   // Dados da equipe
   const [membrosEquipe, setMembrosEquipe] = useState([]);
@@ -27,6 +31,7 @@ function Gerenciamento() {
     slug: '',
     telefone: '',
     endereco: '',
+    imagem: '',
     capacidade: 50,
     precoFastlane: 15.00,
     maxReentradasPorDia: 3,
@@ -47,8 +52,14 @@ function Gerenciamento() {
   }, []);
 
   const carregarDados = async () => {
+    console.log('🔄 [Gerenciamento] Iniciando carregamento de dados...');
+    setLoading(true);
+    
     try {
+      console.log('📡 [Gerenciamento] Buscando dados do restaurante...');
       const response = await restauranteService.buscarMeuRestaurante();
+      console.log('📦 [Gerenciamento] Response completo:', response);
+      
       const rest = response.restaurante || response;
       
       console.log('✅ Dados do restaurante carregados:', rest);
@@ -84,6 +95,7 @@ function Gerenciamento() {
         slug: rest.slug || '',
         telefone: rest.telefone || '',
         endereco: enderecoCompleto,
+        imagem: rest.imagem || '',
         capacidade: rest.maxTicketsPorHora || 50, // Backend usa maxTicketsPorHora
         precoFastlane: rest.precoFastlane || 15.00,
         maxReentradasPorDia: rest.maxReentradasPorDia || 3,
@@ -91,11 +103,42 @@ function Gerenciamento() {
         horarios: horariosParsed
       });
       
-      // TODO: Carregar membros da equipe quando endpoint estiver disponível
-      // setMembrosEquipe(rest.equipe || []);
+      // Carregar preview da imagem existente
+      if (rest.imagem) {
+        setImagemPreview(rest.imagem);
+      }
+      
+      // Carregar equipe do backend
+      try {
+        const equipeResponse = await restauranteService.listarEquipe();
+        setMembrosEquipe(equipeResponse.equipe || []);
+        console.log('✅ Equipe carregada:', equipeResponse.equipe);
+        console.log('📊 Total de membros:', equipeResponse.total);
+      } catch (error) {
+        console.error('❌ Erro ao carregar equipe:', error);
+        
+        // Se a rota não existir (404), mostrar aviso mas não bloquear
+        if (error.response?.status === 404) {
+          console.warn('⚠️ Rota /restaurantes/equipe não implementada no backend');
+          console.warn('⚠️ A funcionalidade de equipe estará temporariamente indisponível');
+        }
+        
+        setMembrosEquipe([]);
+      }
     } catch (error) {
-      console.error('❌ Erro ao carregar dados:', error);
+      console.error('❌ [Gerenciamento] Erro ao carregar dados:', error);
+      console.error('❌ [Gerenciamento] Error response:', error.response);
+      console.error('❌ [Gerenciamento] Error status:', error.response?.status);
+      console.error('❌ [Gerenciamento] Error data:', error.response?.data);
+      
+      // Se for 404, pode ser token antigo
+      if (error.response?.status === 404) {
+        alert('⚠️ Restaurante não encontrado.\n\nIsso pode acontecer se você está usando um token antigo.\nFaça logout e login novamente.');
+      } else {
+        alert(`❌ Erro ao carregar dados: ${error.response?.data?.message || error.message || 'Erro desconhecido'}`);
+      }
     } finally {
+      console.log('✅ [Gerenciamento] Carregamento finalizado (loading = false)');
       setLoading(false);
     }
   };
@@ -104,25 +147,59 @@ function Gerenciamento() {
     e.preventDefault();
     
     try {
-      console.log('➡️ Tentando criar operador:', novoMembro);
+      console.log('➡️ Criando operador:', novoMembro);
       
-      // TODO: Integrar com API para criar operador
-      // await restauranteService.criarOperador(novoMembro);
+      // Integração com backend
+      const response = await restauranteService.criarOperador({
+        nome: novoMembro.nome,
+        email: novoMembro.email,
+        senha: novoMembro.senha
+      });
       
-      console.warn('⚠️ MOCK: Operador NÃO foi salvo no banco de dados');
-      console.warn('⚠️ Endpoint de criar operador ainda não implementado no frontend');
+      console.log('✅ Resposta do backend:', response);
       
-      // Temporariamente adiciona ao estado local (apenas visual)
-      const novoId = Date.now();
-      setMembrosEquipe([...membrosEquipe, { ...novoMembro, id: novoId }]);
+      // Adicionar à lista local
+      setMembrosEquipe([...membrosEquipe, response.operador]);
       setNovoMembro({ nome: '', email: '', senha: '', role: 'OPERADOR' });
       setMostrarModalOperador(false);
       
-      alert('⚠️ ATENÇÃO: Este operador foi adicionado apenas localmente.\nA integração com o backend ainda precisa ser implementada.');
+      alert(`✅ ${response.mensagem || 'Operador criado com sucesso!'}`);
     } catch (error) {
       console.error('❌ Erro ao criar operador:', error);
-      alert('Erro ao criar operador. Tente novamente.');
+      const mensagem = error.response?.data?.message || 'Erro ao criar operador. Tente novamente.';
+      alert(mensagem);
     }
+  };
+
+  const handleImagemChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione uma imagem válida');
+      return;
+    }
+
+    // Validar tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setImagemFile(file);
+
+    // Criar preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagemPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoverImagem = () => {
+    setImagemFile(null);
+    setImagemPreview(configuracoes.imagem || null);
   };
 
   const abrirModalExcluir = (membro) => {
@@ -130,11 +207,30 @@ function Gerenciamento() {
     setMostrarModalExcluir(true);
   };
 
-  const confirmarExclusao = () => {
+  const confirmarExclusao = async () => {
     if (membroParaExcluir) {
-      setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== membroParaExcluir.id));
-      setMostrarModalExcluir(false);
-      setMembroParaExcluir(null);
+      try {
+        // Verificar se é ADMIN (não pode deletar)
+        if (membroParaExcluir.papel === 'ADMIN') {
+          alert('❌ Não é possível excluir um administrador.');
+          cancelarExclusao();
+          return;
+        }
+
+        await restauranteService.deletarOperador(membroParaExcluir.id);
+        console.log('✅ Operador deletado:', membroParaExcluir.id);
+        
+        // Remover da lista local
+        setMembrosEquipe(membrosEquipe.filter(membro => membro.id !== membroParaExcluir.id));
+        setMostrarModalExcluir(false);
+        setMembroParaExcluir(null);
+        
+        alert('✅ Operador removido com sucesso!');
+      } catch (error) {
+        console.error('❌ Erro ao deletar operador:', error);
+        const mensagem = error.response?.data?.message || 'Erro ao remover operador. Tente novamente.';
+        alert(mensagem);
+      }
     }
   };
 
@@ -146,22 +242,46 @@ function Gerenciamento() {
   const handleSalvarConfiguracoes = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        nome: configuracoes.nome,
-        telefone: configuracoes.telefone,
-        maxTicketsPorHora: configuracoes.capacidade, // Frontend usa 'capacidade', backend usa 'maxTicketsPorHora'
-        precoFastlane: configuracoes.precoFastlane,
-        maxReentradasPorDia: configuracoes.maxReentradasPorDia,
-        mensagemBoasVindas: configuracoes.mensagemBoasVindas,
-        horariosFuncionamento: configuracoes.horarios // Envia objeto de horários
-      };
-      
-      console.log('➡️ Salvando configurações:', payload);
-      
-      await restauranteService.atualizarRestaurante(payload);
+      // Validar se tem imagem (required)
+      if (!imagemFile && !configuracoes.imagem) {
+        alert('Por favor, adicione uma imagem do restaurante');
+        return;
+      }
+
+      // Se tem nova imagem, enviar FormData
+      if (imagemFile) {
+        const formData = new FormData();
+        
+        // Adicionar todos os campos
+        formData.append('nome', configuracoes.nome);
+        formData.append('telefone', configuracoes.telefone);
+        formData.append('maxTicketsPorHora', configuracoes.capacidade);
+        formData.append('precoFastlane', configuracoes.precoFastlane);
+        formData.append('maxReentradasPorDia', configuracoes.maxReentradasPorDia);
+        formData.append('mensagemBoasVindas', configuracoes.mensagemBoasVindas);
+        formData.append('imagem', imagemFile);
+        
+        console.log('➡️ Salvando configurações com imagem (FormData)');
+        await restauranteService.atualizarRestaurante(formData);
+      } else {
+        // Sem imagem nova, enviar JSON normal
+        const payload = {
+          nome: configuracoes.nome,
+          telefone: configuracoes.telefone,
+          maxTicketsPorHora: configuracoes.capacidade,
+          precoFastlane: configuracoes.precoFastlane,
+          maxReentradasPorDia: configuracoes.maxReentradasPorDia,
+          mensagemBoasVindas: configuracoes.mensagemBoasVindas,
+          horariosFuncionamento: configuracoes.horarios
+        };
+        
+        console.log('➡️ Salvando configurações:', payload);
+        await restauranteService.atualizarRestaurante(payload);
+      }
       
       console.log('✅ Configurações salvas com sucesso');
       alert('Configurações salvas com sucesso!');
+      await carregarDados(); // Recarregar dados
     } catch (error) {
       console.error('❌ Erro ao salvar configurações:', error);
       
@@ -197,6 +317,18 @@ function Gerenciamento() {
     { key: 'sabado', label: 'Sábado' },
     { key: 'domingo', label: 'Domingo' }
   ];
+
+  // Tela de loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando dados do gerenciamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -274,6 +406,20 @@ function Gerenciamento() {
               </div>
 
               <div className="overflow-x-auto">
+                {membrosEquipe.length === 0 ? (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Nenhum membro na equipe
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      A rota de listagem de equipe ainda não está implementada no backend.
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Implemente GET /api/v1/restaurantes/equipe no backend para ver a lista.
+                    </p>
+                  </div>
+                ) : (
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -302,11 +448,11 @@ function Gerenciamento() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            membro.role === 'ADMIN'
+                            (membro.papel || membro.role) === 'ADMIN'
                               ? 'bg-purple-100 text-purple-800'
                               : 'bg-orange-100 text-orange-800'
                           }`}>
-                            {membro.role}
+                            {membro.papel || membro.role}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -324,6 +470,7 @@ function Gerenciamento() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </div>
         )}
@@ -392,6 +539,60 @@ function Gerenciamento() {
                   />
                 </div>
               </form>
+            </div>
+
+            {/* Upload de Imagem do Restaurante */}
+            <div className="bg-white rounded-xl shadow p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Imagem do Restaurante *
+              </h2>
+
+              {/* Preview da imagem */}
+              {imagemPreview && (
+                <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-300">
+                  <img 
+                    src={imagemPreview} 
+                    alt="Preview" 
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoverImagem}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors shadow-lg"
+                    title="Remover imagem"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+              
+              {/* Input de arquivo */}
+              <div className="flex items-center justify-center w-full">
+                <label 
+                  htmlFor="imagem-gerenciamento" 
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors ${imagemPreview ? 'hidden' : ''}`}
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Building2 className="w-10 h-10 mb-3 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Clique para fazer upload</span> ou arraste e solte
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG ou WEBP (máx. 5MB)</p>
+                  </div>
+                  <input
+                    id="imagem-gerenciamento"
+                    type="file"
+                    className="hidden"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={handleImagemChange}
+                  />
+                </label>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-2">
+                <strong>* Campo obrigatório:</strong> A imagem será exibida na lista de restaurantes disponíveis para os clientes
+              </p>
             </div>
 
             {/* Configurações de Fila */}

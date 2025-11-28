@@ -32,10 +32,13 @@ export default function HistoricoTickets() {
       
       console.log('✅ Histórico carregado:', response);
       
+      // Extrair array de tickets da resposta
+      const ticketsArray = response.tickets || [];
+      
       // Filtrar por status se necessário
-      let ticketsFiltrados = response;
+      let ticketsFiltrados = ticketsArray;
       if (filtroStatus !== 'TODOS') {
-        ticketsFiltrados = response.filter(t => t.status === filtroStatus);
+        ticketsFiltrados = ticketsArray.filter(t => t.status === filtroStatus);
       }
       
       setTickets(ticketsFiltrados);
@@ -47,9 +50,9 @@ export default function HistoricoTickets() {
   };
 
   const ticketsFiltrados = tickets.filter(ticket => 
-    ticket.numero.toString().includes(busca) ||
-    ticket.nomeCliente.toLowerCase().includes(busca.toLowerCase()) ||
-    ticket.telefone.includes(busca)
+    (ticket.numero?.toString() || '').includes(busca) ||
+    (ticket.nomeCliente || '').toLowerCase().includes(busca.toLowerCase()) ||
+    (ticket.telefone || '').includes(busca)
   );
 
   const totalPaginas = Math.ceil(ticketsFiltrados.length / ticketsPorPagina);

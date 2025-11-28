@@ -446,9 +446,9 @@ function RestauranteCard({ restaurante, onEntrarFila }) {
     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200">
       {/* Imagem do Restaurante */}
       <div className="relative h-48 overflow-hidden">
-        {restaurante.imagem ? (
+        {(restaurante.imagemUrl || restaurante.imagem) ? (
           <img 
-            src={restaurante.imagem} 
+            src={restaurante.imagemUrl || restaurante.imagem} 
             alt={restaurante.nome}
             className="w-full h-full object-cover"
           />

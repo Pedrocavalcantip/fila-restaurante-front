@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0', // ← Permite acesso externo (outros dispositivos na rede)
     port: 3001,
     proxy: {
       // Redireciona chamadas /api/* para o backend em localhost:3000

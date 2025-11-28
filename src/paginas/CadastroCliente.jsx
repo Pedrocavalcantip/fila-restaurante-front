@@ -42,7 +42,7 @@ export default function CadastroCliente() {
 
       // Integração com backend
       const payload = {
-        nome: formData.nome,
+        nomeCompleto: formData.nome,
         email: formData.email,
         telefone: formData.telefone,
         senha: formData.senha,
@@ -53,7 +53,7 @@ export default function CadastroCliente() {
       
       console.log('➡️ Payload de cadastro cliente:', payload);
       console.log('📋 Validações:');
-      console.log('  - Nome:', payload.nome);
+      console.log('  - Nome Completo:', payload.nomeCompleto);
       console.log('  - Email:', payload.email);
       console.log('  - Senha (tamanho):', payload.senha.length, 'caracteres');
       console.log('  - CPF:', payload.cpf);

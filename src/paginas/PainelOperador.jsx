@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Clock, Phone, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Phone, CheckCircle, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ticketService, restauranteService } from '../services/api';
+import { useWebSocket } from '../hooks/useWebSocket';
+import WebSocketStatus from '../components/WebSocketStatus';
 
 function PainelOperador() {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ function PainelOperador() {
   const [estatisticas, setEstatisticas] = useState(null);
   const [loading, setLoading] = useState(false);
   const [atualizando, setAtualizando] = useState(false);
+  const [erro, setErro] = useState('');
   const [filaId, setFilaId] = useState('fila-123'); // TODO: Obter do contexto/localStorage
   const [ticketSelecionado, setTicketSelecionado] = useState(null);
   const [modalAberto, setModalAberto] = useState(false);
@@ -24,15 +27,110 @@ function PainelOperador() {
     observacoes: ''
   });
 
-  // Carregar fila a cada 5 segundos (polling - substituir por WebSocket)
+  // Obter slug do restaurante do localStorage
+  const restauranteSlug = localStorage.getItem('restauranteSlug') || '';
+
+  // Conectar WebSocket para atualizações em tempo real
+  const { isConnected, error: wsError, on, off } = useWebSocket({ 
+    restauranteSlug,
+    autoConnect: !!restauranteSlug 
+  });
+
+  // Carregar fila inicial
   useEffect(() => {
     carregarFila();
-    // Comentado polling para não sobrescrever alterações locais durante testes
-    // TODO: Reativar quando integrar com backend real via WebSocket
-    // const interval = setInterval(carregarFila, 5000);
-    // return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Escutar eventos WebSocket em tempo real
+  useEffect(() => {
+    if (!isConnected) {
+      console.log('⚠️ WebSocket não conectado, listeners não registrados');
+      return;
+    }
+
+    console.log('🎧 Registrando listeners WebSocket...');
+
+    // Ticket criado
+    const handleTicketCriado = (data) => {
+      console.log('🎫 EVENTO RECEBIDO: ticket:criado', data);
+      // Recarregar fila para pegar atualização
+      carregarFila();
+    };
+
+    // Ticket atualizado (status/posição mudou)
+    const handleTicketAtualizado = (data) => {
+      console.log('📝 EVENTO RECEBIDO: ticket:atualizado', data);
+      carregarFila();
+    };
+
+    // Ticket chamado
+    const handleTicketChamado = (data) => {
+      console.log('📢 EVENTO RECEBIDO: ticket:chamado', data);
+      // Tocar som de notificação
+      playNotificationSound();
+      carregarFila();
+    };
+
+    // Mesa pronta (cliente confirmou presença)
+    const handleMesaPronta = (data) => {
+      console.log('🍽️ EVENTO RECEBIDO: ticket:mesa-pronta', data);
+      // Tocar som de notificação
+      playNotificationSound();
+      carregarFila();
+    };
+
+    // Ticket finalizado
+    const handleTicketFinalizado = (data) => {
+      console.log('✅ EVENTO RECEBIDO: ticket:finalizado', data);
+      carregarFila();
+    };
+
+    // Ticket cancelado
+    const handleTicketCancelado = (data) => {
+      console.log('❌ EVENTO RECEBIDO: ticket:cancelado', data);
+      carregarFila();
+    };
+
+    // Fila atualizada (estatísticas)
+    const handleFilaAtualizada = (data) => {
+      console.log('📊 EVENTO RECEBIDO: fila:atualizada', data);
+      setEstatisticas(data);
+    };
+
+    // Registrar eventos
+    on('ticket:criado', handleTicketCriado);
+    on('ticket:atualizado', handleTicketAtualizado);
+    on('ticket:chamado', handleTicketChamado);
+    on('ticket:mesa-pronta', handleMesaPronta);
+    on('ticket:finalizado', handleTicketFinalizado);
+    on('ticket:cancelado', handleTicketCancelado);
+    on('fila:atualizada', handleFilaAtualizada);
+    
+    console.log('✅ Listeners WebSocket registrados com sucesso');
+
+    // Cleanup
+    return () => {
+      off('ticket:criado', handleTicketCriado);
+      off('ticket:atualizado', handleTicketAtualizado);
+      off('ticket:chamado', handleTicketChamado);
+      off('ticket:mesa-pronta', handleMesaPronta);
+      off('ticket:finalizado', handleTicketFinalizado);
+      off('ticket:cancelado', handleTicketCancelado);
+      off('fila:atualizada', handleFilaAtualizada);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, on, off]);
+
+  const playNotificationSound = () => {
+    // Tocar som de notificação (se tiver arquivo de áudio)
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+    } catch (err) {
+      console.log('Erro ao tocar som:', err);
+    }
+  };
 
   const carregarFila = async () => {
     setLoading(true);
@@ -55,13 +153,17 @@ function PainelOperador() {
           const responseRestaurante = await restauranteService.buscarMeuRestaurante();
           console.log('📦 Dados do restaurante:', responseRestaurante);
           
-          if (responseRestaurante.restaurante?.filas?.[0]?.id) {
-            filaId = responseRestaurante.restaurante.filas[0].id;
+          // Backend retorna { restaurante: { filas: [...] } } ou diretamente { filas: [...] }
+          const filas = responseRestaurante.restaurante?.filas || responseRestaurante.filas || [];
+          
+          if (filas.length > 0) {
+            filaId = filas[0].id;
             localStorage.setItem('filaAtivaId', filaId);
-            console.log('✅ FilaId obtido do restaurante:', filaId);
+            console.log('✅ FilaId obtido:', filaId);
           } else {
             console.error('❌ ERRO: Restaurante não possui filas');
-            setErro('Restaurante sem filas cadastradas. Entre em contato com o suporte.');
+            console.error('❌ Resposta completa:', responseRestaurante);
+            setErro('⚠️ ERRO DE CONFIGURAÇÃO: O backend não retornou as filas do restaurante. Verifique se o endpoint GET /restaurantes/meu-restaurante está incluindo o relacionamento "filas" ou "Fila".');
             return;
           }
         } catch (error) {
@@ -77,11 +179,9 @@ function PainelOperador() {
       setTickets(response.tickets || []);
       setEstatisticas(response.estatisticas);
       console.log('✅ Fila carregada:', response);
-      console.log('📋 Primeiro ticket (estrutura):', response.tickets?.[0] ? Object.keys(response.tickets[0]) : 'Nenhum ticket');
-      console.log('🔍 Campos de data:', {
-        createdAt: response.tickets?.[0]?.createdAt,
-        updatedAt: response.tickets?.[0]?.updatedAt
-      });
+      console.log('📊 Total de tickets:', response.tickets?.length);
+      console.log('📋 Status dos tickets:', response.tickets?.map(t => ({ numero: t.numero, status: t.status })));
+      console.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
       setErro('Erro ao carregar fila. Tente novamente.');
@@ -116,15 +216,37 @@ function PainelOperador() {
     }
   };
 
+  const confirmarPresenca = async (ticketId) => {
+    try {
+      console.log('🔄 Confirmando presença do ticket:', ticketId);
+      const response = await ticketService.confirmarPresenca(ticketId);
+      console.log('✅ Resposta do backend:', response);
+      console.log('📊 Status do ticket após confirmar:', response.ticket?.status);
+      console.log('📦 Ticket completo:', JSON.stringify(response.ticket, null, 2));
+      
+      // Recarregar fila para mostrar atualização
+      await carregarFila();
+    } catch (error) {
+      console.error('❌ Erro ao confirmar presença:', error);
+      const mensagem = error.response?.data?.mensagem || error.response?.data?.erro || 'Erro ao confirmar presença';
+      alert(`Erro: ${mensagem}`);
+    }
+  };
+
   const finalizarAtendimento = async (ticketId) => {
     try {
-      await ticketService.finalizarAtendimento(ticketId);
-      console.log('✅ Atendimento finalizado');
+      console.log('🔄 Finalizando atendimento do ticket:', ticketId);
+      const response = await ticketService.finalizarAtendimento(ticketId);
+      console.log('✅ Atendimento finalizado:', response);
       await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
     } catch (error) {
-      console.error('Erro ao finalizar atendimento:', error);
+      console.error('❌ Erro ao finalizar atendimento:', error);
+      console.error('❌ Status:', error.response?.status);
+      console.error('❌ Dados:', error.response?.data);
+      const mensagem = error.response?.data?.mensagem || error.response?.data?.erro || 'Erro ao finalizar atendimento';
+      alert(`Erro: ${mensagem}`);
     }
   };
 
@@ -222,9 +344,17 @@ function PainelOperador() {
     return tel;
   };
 
-  const formatarTempoEspera = (createdAt) => {
-    const minutos = Math.floor((Date.now() - new Date(createdAt)) / 60000);
+  const formatarTempoEspera = (dataISO) => {
+    if (!dataISO) return '0 min';
+    const minutos = Math.floor((Date.now() - new Date(dataISO)) / 60000);
     return `${minutos} min`;
+  };
+
+  const formatarTempoChamado = (ticket) => {
+    // Para tickets chamados, calcular desde quando foi chamado (updatedAt)
+    // Para tickets aguardando, calcular desde criação (createdAt)
+    const dataReferencia = ticket.status === 'CHAMADO' ? ticket.updatedAt : ticket.createdAt;
+    return formatarTempoEspera(dataReferencia);
   };
 
   const abrirDetalhes = (ticket) => {
@@ -289,7 +419,10 @@ function PainelOperador() {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Fila ao Vivo</h1>
-                <p className="text-sm text-gray-600">Gerencie os clientes em tempo real</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-gray-600">Gerencie os clientes em tempo real</p>
+                  <WebSocketStatus isConnected={isConnected} error={wsError} />
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -422,10 +555,12 @@ function PainelOperador() {
                           </span>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             ticket.status === 'CHAMADO'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                              : ticket.status === 'MESA_PRONTA'
                               ? 'bg-green-100 text-green-800 border border-green-300'
-                              : 'bg-gray-100 text-gray-800 border border-gray-300'
+                              : 'bg-orange-100 text-orange-800 border border-orange-300'
                           }`}>
-                            {ticket.status === 'CHAMADO' ? 'CHAMADO' : 'AGUARDANDO'}
+                            {ticket.status === 'CHAMADO' ? '🔔 CHAMADO' : ticket.status === 'MESA_PRONTA' ? '🍽️ MESA PRONTA' : '⏳ AGUARDANDO'}
                           </span>
                         </div>
                         
@@ -436,17 +571,17 @@ function PainelOperador() {
                           </div>
                           <div className="flex items-center gap-2 text-gray-700">
                             <Users className="w-4 h-4 text-gray-500" />
-                            <span>{ticket.quantidadePessoas} pessoa{ticket.quantidadePessoas > 1 ? 's' : ''}</span>
+                            <span>{ticket.quantidadePessoas || 1} pessoa{(ticket.quantidadePessoas || 1) > 1 ? 's' : ''}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-orange-500" />
                             {ticket.status === 'CHAMADO' ? (
                               <span className="font-semibold text-green-600">
-                                Chamado há {formatarTempoEspera(ticket.createdAt)}
+                                Chamado há {formatarTempoChamado(ticket)}
                               </span>
                             ) : (
                               <span className="font-semibold text-orange-600">
-                                Aguardando {formatarTempoEspera(ticket.createdAt)}
+                                Aguardando {formatarTempoChamado(ticket)}
                               </span>
                             )}
                           </div>
@@ -490,11 +625,11 @@ function PainelOperador() {
                       {ticket.status === 'CHAMADO' && (
                         <>
                           <button
-                            onClick={() => finalizarAtendimento(ticket.id)}
+                            onClick={() => confirmarPresenca(ticket.id)}
                             className="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
                           >
-                            <CheckCircle2 className="w-4 h-4" />
-                            Finalizar
+                            <CheckCircle className="w-4 h-4" />
+                            Confirmar Presença
                           </button>
                           <button
                             onClick={() => rechamarCliente(ticket.id)}
@@ -515,6 +650,25 @@ function PainelOperador() {
                           >
                             <XCircle className="w-4 h-4" />
                             No-Show
+                          </button>
+                        </>
+                      )}
+
+                      {ticket.status === 'MESA_PRONTA' && (
+                        <>
+                          <button
+                            onClick={() => finalizarAtendimento(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:shadow-lg text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Finalizar Atendimento
+                          </button>
+                          <button
+                            onClick={() => abrirModalCancelar(ticket.id)}
+                            className="w-full px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Cancelar
                           </button>
                         </>
                       )}

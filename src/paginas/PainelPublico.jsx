@@ -2,11 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Clock, ArrowLeft } from 'lucide-react';
 import { ticketService } from '../services/api';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function PainelPublico() {
   const navigate = useNavigate();
   const [ticketsChamados, setTicketsChamados] = useState([]);
   const [horaAtual, setHoraAtual] = useState(new Date());
+
+  // Obter slug do restaurante
+  const restauranteSlug = localStorage.getItem('restauranteSlug') || '';
+
+  // Conectar WebSocket
+  const { isConnected, on, off } = useWebSocket({ 
+    restauranteSlug,
+    autoConnect: !!restauranteSlug 
+  });
 
   useEffect(() => {
     // Atualizar hora a cada segundo
@@ -14,18 +24,66 @@ export default function PainelPublico() {
       setHoraAtual(new Date());
     }, 1000);
 
-    // Carregar tickets chamados a cada 3 segundos
-    const intervaloTickets = setInterval(() => {
-      carregarTicketsChamados();
-    }, 3000);
-
+    // Carregar tickets iniciais
     carregarTicketsChamados();
 
     return () => {
       clearInterval(intervaloHora);
-      clearInterval(intervaloTickets);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Escutar eventos WebSocket em tempo real
+  useEffect(() => {
+    if (!isConnected) return;
+
+    console.log('🎧 Painel Público: Escutando tickets chamados...');
+
+    // Ticket chamado - adicionar ao topo da lista
+    const handleTicketChamado = (data) => {
+      console.log('📢 TICKET CHAMADO:', data);
+      
+      // Tocar som de notificação
+      playNotificationSound();
+      
+      // Adicionar ao topo e manter apenas os 10 mais recentes
+      setTicketsChamados(prev => {
+        const novosTickets = [data, ...prev.filter(t => t.id !== data.id)];
+        return novosTickets.slice(0, 10);
+      });
+    };
+
+    // Ticket atualizado - atualizar na lista se estiver presente
+    const handleTicketAtualizado = (data) => {
+      setTicketsChamados(prev => {
+        const index = prev.findIndex(t => t.id === data.id);
+        if (index !== -1) {
+          const novosTickets = [...prev];
+          novosTickets[index] = { ...novosTickets[index], ...data };
+          return novosTickets;
+        }
+        return prev;
+      });
+    };
+
+    on('ticket:chamado', handleTicketChamado);
+    on('ticket:atualizado', handleTicketAtualizado);
+
+    return () => {
+      off('ticket:chamado', handleTicketChamado);
+      off('ticket:atualizado', handleTicketAtualizado);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, on, off]);
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+    } catch (err) {
+      console.log('Erro ao tocar som:', err);
+    }
+  };
 
   const carregarTicketsChamados = async () => {
     try {

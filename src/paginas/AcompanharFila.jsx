@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users, AlertCircle, User, LogOut, History, CheckCircle, XCircle, UserX } from 'lucide-react';
 import { clienteService, publicoService } from '../services/api';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 export default function AcompanharFila() {
   const [abaAtiva, setAbaAtiva] = useState('fila'); // 'fila' ou 'historico'
@@ -16,21 +17,100 @@ export default function AcompanharFila() {
   const [loadingCancelar, setLoadingCancelar] = useState(false);
   const navigate = useNavigate();
 
+  // Obter slug do restaurante do ticket ativo
+  const restauranteSlug = ticket?.restaurante?.slug || '';
+
+  // Conectar WebSocket para atualizações em tempo real
+  const { isConnected, on, off } = useWebSocket({ 
+    restauranteSlug,
+    autoConnect: !!restauranteSlug 
+  });
+
   useEffect(() => {
     if (abaAtiva === 'fila') {
       carregarTicket();
-      
-      // Atualizar a cada 10 segundos
-      const interval = setInterval(() => {
-        carregarTicket();
-      }, 10000);
-
-      return () => clearInterval(interval);
     } else if (abaAtiva === 'historico') {
       carregarHistorico();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abaAtiva]);
+
+  // Escutar eventos WebSocket do MEU ticket
+  useEffect(() => {
+    if (!isConnected || !ticket?.id) return;
+
+    console.log('🎧 Escutando atualizações do ticket:', ticket.id);
+
+    // Ticket atualizado
+    const handleTicketAtualizado = (data) => {
+      // Verificar se é o meu ticket
+      if (data.id === ticket.id) {
+        console.log('📝 Meu ticket atualizado:', data);
+        carregarTicket(); // Recarregar dados atualizados
+      }
+    };
+
+    // Ticket chamado
+    const handleTicketChamado = (data) => {
+      if (data.id === ticket.id) {
+        console.log('📢 MEU TICKET FOI CHAMADO!', data);
+        // Exibir notificação
+        if (Notification.permission === 'granted') {
+          new Notification('Seu ticket foi chamado!', {
+            body: `Ticket ${data.numero} - Dirija-se ao atendimento`,
+            icon: '/logo.png'
+          });
+        }
+        // Tocar som
+        try {
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+        } catch (err) {
+          console.log('Erro ao tocar som:', err);
+        }
+        carregarTicket();
+      }
+    };
+
+    // Mesa pronta (quando operador confirma presença)
+    const handleMesaPronta = (data) => {
+      console.log('🍽️ EVENTO WebSocket recebido: ticket:mesa-pronta', data);
+      console.log('🔍 Meu ticket ID:', ticket.id);
+      console.log('🔍 Ticket ID do evento:', data.id || data.ticketId);
+      
+      if (data.id === ticket.id || data.ticketId === ticket.id) {
+        console.log('✅ É o meu ticket! Atualizando...');
+        // Exibir notificação
+        if (Notification.permission === 'granted') {
+          new Notification('Sua mesa está pronta!', {
+            body: `Dirija-se ao balcão`,
+            icon: '/logo.png'
+          });
+        }
+        // Tocar som
+        try {
+          const audio = new Audio('/notification.mp3');
+          audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+        } catch (err) {
+          console.log('Erro ao tocar som:', err);
+        }
+        carregarTicket();
+      } else {
+        console.log('⚠️ Não é o meu ticket, ignorando');
+      }
+    };
+
+    on('ticket:atualizado', handleTicketAtualizado);
+    on('ticket:chamado', handleTicketChamado);
+    on('ticket:mesa-pronta', handleMesaPronta);
+
+    return () => {
+      off('ticket:atualizado', handleTicketAtualizado);
+      off('ticket:chamado', handleTicketChamado);
+      off('ticket:mesa-pronta', handleMesaPronta);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, ticket?.id, on, off]);
 
   const carregarHistorico = async () => {
     try {
@@ -74,14 +154,8 @@ export default function AcompanharFila() {
       
       // VERIFICAR CAMPOS RETORNADOS PELO BACKEND
       const ticket = response.ticket || response;
-      console.log('🔍 VERIFICAÇÃO DE CAMPOS:');
-      console.log('  ✓ numero:', ticket?.numero);
-      console.log('  ✓ posicao:', ticket?.posicao);
-      console.log('  ✓ tempoEstimadoMinutos:', ticket?.tempoEstimadoMinutos);
-      console.log('  ✓ quantidadePessoas:', ticket?.quantidadePessoas);
-      console.log('  ⚠️ observacoes:', ticket?.observacoes, '← Backend não retorna este campo');
-      console.log('  ✓ prioridade:', ticket?.prioridade);
-      console.log('  ✓ status:', ticket?.status);
+      console.log('🔍 STATUS DO TICKET:', ticket?.status);
+      console.log('📊 Ticket completo:', ticket);
       
       setTicket(ticket);
       setErro('');
@@ -153,8 +227,12 @@ export default function AcompanharFila() {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'FINALIZADO':
+      case 'MESA_PRONTA':
         return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          🍽️ Mesa Pronta
+        </span>;
+      case 'FINALIZADO':
+        return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
           <CheckCircle size={12} /> Finalizado
         </span>;
       case 'CANCELADO':
@@ -191,8 +269,10 @@ export default function AcompanharFila() {
         return { texto: 'Próximo na Fila', cor: 'text-orange-600', bgCor: 'bg-orange-50', completed: false };
       case 'CHAMADO':
         return { texto: 'Chamado', cor: 'text-blue-600', bgCor: 'bg-blue-50', completed: true };
-      case 'ATENDENDO':
+      case 'MESA_PRONTA':
         return { texto: 'Mesa Pronta', cor: 'text-green-600', bgCor: 'bg-green-50', completed: true };
+      case 'ATENDENDO':
+        return { texto: 'Atendendo', cor: 'text-purple-600', bgCor: 'bg-purple-50', completed: true };
       default:
         return { texto: 'Na Fila', cor: 'text-gray-600', bgCor: 'bg-gray-50', completed: true };
     }
@@ -200,6 +280,7 @@ export default function AcompanharFila() {
 
   const statusProximoNaFila = getStatusInfo('AGUARDANDO');
   const isChamado = ticket?.status === 'CHAMADO';
+  const isMesaPronta = ticket?.status === 'MESA_PRONTA';
   const isAtendendo = ticket?.status === 'ATENDENDO';
 
   return (
@@ -377,20 +458,20 @@ export default function AcompanharFila() {
               </div>
             </div>
 
-            {/* Chamado - Completo se status for CHAMADO, ATENDENDO ou FINALIZADO */}
+            {/* Chamado - Completo se status for CHAMADO, MESA_PRONTA ou FINALIZADO */}
             <div className="flex items-start gap-3">
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                ['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
+                ['CHAMADO', 'MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status)
                   ? 'bg-orange-600 border-orange-600'
                   : 'border-orange-300'
               }`}>
-                {['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status) && (
+                {['CHAMADO', 'MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status) && (
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
               <div className="flex-1">
                 <p className={`text-sm font-medium ${
-                  ['CHAMADO', 'ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
+                  ['CHAMADO', 'MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status)
                     ? 'text-orange-600'
                     : 'text-gray-400'
                 }`}>
@@ -405,25 +486,52 @@ export default function AcompanharFila() {
               </div>
             </div>
 
-            {/* Mesa Pronta / Finalizado */}
+            {/* Mesa Pronta - Novo status entre CHAMADO e FINALIZADO */}
             <div className="flex items-start gap-3">
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
-                ['ATENDENDO', 'FINALIZADO'].includes(ticket?.status)
+                ['MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status)
                   ? 'bg-green-600 border-green-600'
                   : 'border-gray-200'
               }`}>
-                {['ATENDENDO', 'FINALIZADO'].includes(ticket?.status) && (
+                {['MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status) && (
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 )}
               </div>
               <div className="flex-1">
                 <p className={`text-sm font-medium ${
-                  ['ATENDENDO', 'FINALIZADO'].includes(ticket?.status) ? 'text-green-600' : 'text-gray-400'
+                  ['MESA_PRONTA', 'FINALIZADO'].includes(ticket?.status)
+                    ? 'text-green-600'
+                    : 'text-gray-400'
                 }`}>
                   Mesa Pronta
                 </p>
-                {ticket?.status === 'ATENDENDO' && (
-                  <p className="text-xs text-green-600 font-medium">Aproveite sua refeição!</p>
+                {ticket?.status === 'MESA_PRONTA' && (
+                  <p className="text-xs text-green-600 font-medium">Sua mesa está pronta! Dirija-se ao balcão.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Finalizado */}
+            <div className="flex items-start gap-3">
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
+                ticket?.status === 'FINALIZADO'
+                  ? 'bg-blue-600 border-blue-600'
+                  : 'border-gray-200'
+              }`}>
+                {ticket?.status === 'FINALIZADO' && (
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${
+                  ticket?.status === 'FINALIZADO'
+                    ? 'text-blue-600'
+                    : 'text-gray-400'
+                }`}>
+                  Atendimento Finalizado
+                </p>
+                {ticket?.status === 'FINALIZADO' && (
+                  <p className="text-xs text-blue-600 font-medium">Obrigado pela visita!</p>
                 )}
               </div>
             </div>

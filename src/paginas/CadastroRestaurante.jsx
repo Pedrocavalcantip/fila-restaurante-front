@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Building2, CheckCircle2, X } from 'lucide-react';
 import { restauranteService } from '../services/api';
 
 export default function CadastroRestaurante() {
@@ -18,7 +18,8 @@ export default function CadastroRestaurante() {
     numero: '',
     bairro: '',
     cidade: '',
-    estado: 'SP'
+    estado: 'SP',
+    imagemUrl: '' // URL da imagem no Cloudinary
   });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -92,6 +93,8 @@ export default function CadastroRestaurante() {
     setFormData(prev => ({ ...prev, cep: formatted }));
   };
 
+
+
   const handleCadastro = async (e) => {
     e.preventDefault();
     setErro('');
@@ -121,35 +124,34 @@ export default function CadastroRestaurante() {
         return;
       }
 
-      // Preparar payload para o backend
+      // Preparar payload JSON (cadastro não aceita upload de imagem)
       const payload = {
         nome: formData.nome.trim(),
         slug: formData.slug.trim(),
         emailAdmin: formData.emailAdmin.trim(),
         senhaAdmin: formData.senhaAdmin,
         precoFastlane: Number(formData.precoFastlane),
-        precoVip: Number(formData.precoFastlane), // Usar mesmo valor do FastLane
+        precoVip: Number(formData.precoFastlane),
         maxReentradasPorDia: Number(formData.maxReentradasPorDia),
         telefone: formData.telefone.replace(/\D/g, ''),
         cidade: formData.cidade.trim(),
         estado: formData.estado
       };
 
-      console.log('➡️ Payload COMPLETO de cadastro:', JSON.stringify(payload, null, 2));
-      console.log('📋 Validações DETALHADAS:');
+      console.log('➡️ Payload de cadastro (JSON):', JSON.stringify(payload, null, 2));
+      console.log('📋 Campos incluídos:');
       console.log('  - Nome:', payload.nome);
       console.log('  - Slug:', payload.slug);
       console.log('  - Email Admin:', payload.emailAdmin);
-      console.log('  - Senha Admin:', payload.senhaAdmin ? '***' : 'VAZIO');
-      console.log('  - Preço Fastlane (formData):', formData.precoFastlane, '(tipo:', typeof formData.precoFastlane + ')');
-      console.log('  - Preço Fastlane (payload):', payload.precoFastlane, '(tipo:', typeof payload.precoFastlane + ')');
-      console.log('  - Preço VIP (payload):', payload.precoVip, '(tipo:', typeof payload.precoVip + ')');
-      console.log('  - Max Reentradas (formData):', formData.maxReentradasPorDia, '(tipo:', typeof formData.maxReentradasPorDia + ')');
-      console.log('  - Max Reentradas (payload):', payload.maxReentradasPorDia, '(tipo:', typeof payload.maxReentradasPorDia + ')');
-      console.log('  - Telefone (limpo):', payload.telefone);
+      console.log('  - Senha Admin: ***');
+      console.log('  - Preço Fastlane:', payload.precoFastlane);
+      console.log('  - Preço VIP:', payload.precoVip);
+      console.log('  - Max Reentradas:', payload.maxReentradasPorDia);
+      console.log('  - Telefone:', payload.telefone);
       console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
-
-      // Chamar API
+      console.log('  - Imagem será enviada em PATCH após cadastro');
+      
+      // Cadastrar restaurante
       const response = await restauranteService.cadastrar(payload);
       
       console.log('✅ Restaurante cadastrado com sucesso!');

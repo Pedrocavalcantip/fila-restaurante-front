@@ -31,6 +31,19 @@ export default function LoginRestaurante() {
       localStorage.setItem('operadorLogado', JSON.stringify(usuario));
       localStorage.setItem('restauranteSlug', slug);
       
+      // DEBUG: Decodificar JWT para ver o payload
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          console.log('🔍 JWT Payload decodificado:', payload);
+          console.log('📌 RestauranteId no JWT:', payload.restauranteId);
+          console.log('📌 UsuarioId no JWT:', payload.usuarioId);
+        }
+      } catch (e) {
+        console.error('❌ Erro ao decodificar JWT:', e);
+      }
+      
       // CRÍTICO: Salvar filaId para o PainelOperador funcionar
       if (usuario.restaurante?.filaAtiva?.id) {
         localStorage.setItem('filaAtivaId', usuario.restaurante.filaAtiva.id);
