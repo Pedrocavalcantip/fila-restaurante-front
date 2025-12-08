@@ -14,13 +14,13 @@ function EscolhaPerfil() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Card Cliente */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow h-full">
+            <div className="flex flex-col items-center text-center h-full">
               <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
                 <Users className="w-10 h-10 text-orange-500" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Sou Cliente</h2>
-              <p className="text-gray-600 mb-8">
+              <p className="text-gray-600 mb-8 flex-grow">
                 Quero encontrar restaurantes e acompanhar minha fila
               </p>
               <button
@@ -33,13 +33,13 @@ function EscolhaPerfil() {
           </div>
 
           {/* Card Restaurante */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow">
-            <div className="flex flex-col items-center text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow h-full">
+            <div className="flex flex-col items-center text-center h-full">
               <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
                 <Building2 className="w-10 h-10 text-orange-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-3">Sou Restaurante</h2>
-              <p className="text-gray-600 mb-8">
+              <p className="text-gray-600 mb-8 flex-grow">
                 Quero gerenciar filas, equipe e ver analytics
               </p>
               <button

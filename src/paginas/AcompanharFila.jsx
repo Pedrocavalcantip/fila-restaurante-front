@@ -154,8 +154,21 @@ export default function AcompanharFila() {
       
       // VERIFICAR CAMPOS RETORNADOS PELO BACKEND
       const ticket = response.ticket || response;
-      console.log('🔍 STATUS DO TICKET:', ticket?.status);
-      console.log('📊 Ticket completo:', ticket);
+      
+      // Se o restaurante existe mas não tem endereço, busca os detalhes completos
+      if (ticket?.restaurante?.id && !ticket.restaurante.endereco) {
+        try {
+          const restauranteResponse = await api.get(`/restaurantes/${ticket.restaurante.id}`);
+          if (restauranteResponse.data?.restaurante) {
+            ticket.restaurante = {
+              ...ticket.restaurante,
+              ...restauranteResponse.data.restaurante
+            };
+          }
+        } catch (error) {
+          console.error('Erro ao buscar detalhes do restaurante:', error);
+        }
+      }
       
       setTicket(ticket);
       setErro('');
@@ -286,17 +299,17 @@ export default function AcompanharFila() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Voltar</span>
+            <ArrowLeft size={18} />
+            <span className="text-sm font-medium">Voltar</span>
           </button>
           
-          <h1 className="text-lg font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
+          <h1 className="text-base font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">
             {abaAtiva === 'fila' ? ticket?.restaurante?.nome : 'Meu Histórico'}
           </h1>
           
@@ -343,29 +356,29 @@ export default function AcompanharFila() {
       </header>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200 sticky top-[72px] z-20">
-        <div className="max-w-2xl mx-auto px-4">
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto px-6">
           <div className="flex gap-6">
             <button
               onClick={() => setAbaAtiva('fila')}
-              className={`py-3 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              className={`py-3 px-1 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 abaAtiva === 'fila'
                   ? 'border-orange-600 text-orange-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
-              <Clock size={18} />
+              <Clock size={16} />
               Fila Atual
             </button>
             <button
               onClick={() => setAbaAtiva('historico')}
-              className={`py-3 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              className={`py-3 px-1 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 abaAtiva === 'historico'
                   ? 'border-orange-600 text-orange-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
-              <History size={18} />
+              <History size={16} />
               Histórico
             </button>
           </div>
@@ -374,30 +387,24 @@ export default function AcompanharFila() {
 
       {/* Conteúdo da Aba Fila */}
       {abaAtiva === 'fila' && (
-        <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-          {/* Endereço */}
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPin size={16} />
-            <span>{ticket?.restaurante?.endereco}</span>
-          </div>
-
-        {/* Card de Posição na Fila */}
-        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 text-center">
-          <p className="text-sm text-gray-600 mb-2">Sua Posição na Fila</p>
-          <div className="text-7xl font-bold text-orange-600 mb-3">
+        <main className="max-w-3xl mx-auto px-6 py-5 space-y-4">
+          {/* Cartão de Posição */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 text-center border border-orange-200">
+          <p className="text-xs text-gray-600 mb-1 uppercase tracking-wide">Sua Posição na Fila</p>
+          <div className="text-6xl font-bold text-orange-600 mb-2">
             {ticket?.posicao}º
           </div>
-          <div className="flex items-center justify-center gap-2 text-orange-700">
-            <Clock size={16} />
-            <span className="text-sm font-medium">
+          <div className="flex items-center justify-center gap-1.5 text-orange-700">
+            <Clock size={14} />
+            <span className="text-xs font-medium">
               Tempo estimado: {ticket?.tempoEstimadoMinutos || 15} min
             </span>
           </div>
         </div>
 
         {/* Detalhes do Ticket */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Detalhes do Ticket</h2>
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <h2 className="text-sm font-bold text-gray-900 mb-3">Detalhes do Ticket</h2>
           
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -430,8 +437,8 @@ export default function AcompanharFila() {
         </div>
 
         {/* Status do Atendimento */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Status do Atendimento</h2>
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+          <h2 className="text-sm font-bold text-gray-900 mb-3">Status do Atendimento</h2>
           
           <div className="space-y-3">
             {/* Ticket Confirmado - Sempre completo */}
@@ -540,10 +547,10 @@ export default function AcompanharFila() {
 
         {/* Mensagem de Boas-Vindas do Restaurante */}
         {ticket?.restaurante?.mensagemBoasVindas && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-            <AlertCircle size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex gap-2.5">
+            <AlertCircle size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-blue-900 mb-1">Mensagem do Restaurante</p>
+              <p className="text-xs font-semibold text-blue-900 mb-0.5">Mensagem do Restaurante</p>
               <p className="text-xs text-blue-700">
                 {ticket.restaurante.mensagemBoasVindas}
               </p>
@@ -552,29 +559,29 @@ export default function AcompanharFila() {
         )}
 
         {/* Alerta */}
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex gap-3">
-          <AlertCircle size={20} className="text-orange-600 flex-shrink-0 mt-0.5" />
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex gap-2.5">
+          <AlertCircle size={18} className="text-orange-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-orange-900 mb-1">Atenção</p>
+            <p className="text-xs font-semibold text-orange-900 mb-0.5">Atenção</p>
             <p className="text-xs text-orange-700">
-              Por favor, esteja pronto quando sua posição for chamada. Você terá 5 minutos para confirmar sua presença.
+              Esteja pronto quando sua posição for chamada. Você terá 5 minutos para confirmar sua presença.
             </p>
           </div>
         </div>
 
         {/* Botões */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-2 pt-2">
           <button
             onClick={handleAtualizarStatus}
             disabled={loading}
-            className="w-full py-3 px-4 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="w-full py-2.5 px-4 border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             {loading ? 'Atualizando...' : 'Atualizar Status'}
           </button>
           
           <button
             onClick={handleAbrirModalCancelar}
-            className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+            className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Cancelar Ticket
           </button>
@@ -584,14 +591,14 @@ export default function AcompanharFila() {
 
       {/* Conteúdo da Aba Histórico */}
       {abaAtiva === 'historico' && (
-        <main className="max-w-2xl mx-auto px-4 py-6">
+        <main className="max-w-3xl mx-auto px-6 py-5">
           {/* Filtros */}
-          <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-3">Filtrar por status</label>
+          <div className="bg-white rounded-lg p-4 mb-4 shadow-sm border border-gray-100">
+            <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Filtrar por status</label>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFiltroStatus('TODOS')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filtroStatus === 'TODOS'
                     ? 'bg-orange-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -601,7 +608,7 @@ export default function AcompanharFila() {
               </button>
               <button
                 onClick={() => setFiltroStatus('FINALIZADO')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filtroStatus === 'FINALIZADO'
                     ? 'bg-green-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -611,7 +618,7 @@ export default function AcompanharFila() {
               </button>
               <button
                 onClick={() => setFiltroStatus('CANCELADO')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filtroStatus === 'CANCELADO'
                     ? 'bg-red-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -621,7 +628,7 @@ export default function AcompanharFila() {
               </button>
               <button
                 onClick={() => setFiltroStatus('NO_SHOW')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   filtroStatus === 'NO_SHOW'
                     ? 'bg-gray-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -634,28 +641,28 @@ export default function AcompanharFila() {
 
           {/* Lista de Histórico */}
           {loadingHistorico ? (
-            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mb-4"></div>
-              <p className="text-gray-600">Carregando histórico...</p>
+            <div className="bg-white rounded-lg p-8 text-center shadow-sm border border-gray-100">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600 mb-3"></div>
+              <p className="text-sm text-gray-600">Carregando histórico...</p>
             </div>
           ) : historicoFiltrado.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
-              <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-600">Nenhum ticket no histórico</p>
-              <p className="text-sm text-gray-500 mt-2">
+            <div className="bg-white rounded-lg p-8 text-center shadow-sm border border-gray-100">
+              <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-gray-600 font-medium">Nenhum ticket no histórico</p>
+              <p className="text-xs text-gray-500 mt-1">
                 {filtroStatus !== 'TODOS' ? 'Tente alterar o filtro' : 'Seus tickets anteriores aparecerão aqui'}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {historicoFiltrado.map((ticket) => (
-                <div key={ticket.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-3">
+                <div key={ticket.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-2.5">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900">{ticket.restaurante?.nome || 'Restaurante'}</h3>
+                      <h3 className="text-sm font-bold text-gray-900">{ticket.restaurante?.nome || 'Restaurante'}</h3>
                       {ticket.restaurante?.endereco && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                          <MapPin size={14} />
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
+                          <MapPin size={12} />
                           <span>{ticket.restaurante.endereco}</span>
                         </div>
                       )}
@@ -663,28 +670,28 @@ export default function AcompanharFila() {
                     {getStatusBadge(ticket.status)}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     <div>
-                      <span className="text-xs text-gray-500">Ticket</span>
-                      <p className="text-sm font-semibold text-gray-900">{ticket.numero}</p>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Ticket</span>
+                      <p className="text-xs font-semibold text-gray-900">{ticket.numero}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500">Prioridade</span>
-                      <p className="text-sm font-medium text-gray-900">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Prioridade</span>
+                      <p className="text-xs font-medium text-gray-900">
                         {ticket.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500">Pessoas</span>
-                      <p className="text-sm font-medium text-gray-900">{ticket.quantidadePessoas || '-'}</p>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Pessoas</span>
+                      <p className="text-xs font-medium text-gray-900">{ticket.quantidadePessoas || '-'}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500">Data</span>
-                      <p className="text-sm font-medium text-gray-900">{formatarData(ticket.createdAt)}</p>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide">Data</span>
+                      <p className="text-xs font-medium text-gray-900">{formatarData(ticket.createdAt)}</p>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
+                  <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-500">
                     <div className="flex items-center gap-4">
                       <span>
                         Entrada: {formatarHora(ticket.createdAt)}
@@ -721,9 +728,9 @@ export default function AcompanharFila() {
                   </div>
 
                   {ticket.motivoCancelamento && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-xs font-medium text-red-900">Motivo do cancelamento:</p>
-                      <p className="text-sm text-red-700 mt-1">{ticket.motivoCancelamento}</p>
+                    <div className="mt-2.5 p-2.5 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-[10px] font-semibold text-red-900 uppercase tracking-wide">Motivo do cancelamento:</p>
+                      <p className="text-xs text-red-700 mt-0.5">{ticket.motivoCancelamento}</p>
                     </div>
                   )}
                 </div>

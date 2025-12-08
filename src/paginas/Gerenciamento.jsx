@@ -349,9 +349,6 @@ function Gerenciamento() {
                 <p className="text-sm text-gray-600">Configure sua equipe e filas do restaurante</p>
               </div>
             </div>
-            <button className="flex items-center gap-2 text-gray-700 hover:text-gray-900">
-              <User className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </div>
@@ -390,20 +387,65 @@ function Gerenciamento() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Aba Equipe */}
         {abaAtiva === 'equipe' && (
-          <div className="bg-white rounded-xl shadow">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Membros da Equipe</h2>
-                  <p className="text-sm text-gray-600 mt-1">Gerencie os operadores e gerentes do restaurante</p>
+          <>
+            {/* Estatísticas da Equipe */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Total de Membros</p>
+                    <p className="text-2xl font-bold text-gray-900">{membrosEquipe.length}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <User className="w-5 h-5 text-orange-600" />
+                  </div>
                 </div>
-                <button
-                  onClick={() => setMostrarModalOperador(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Adicionar Operador
-                </button>
               </div>
+
+              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Administradores</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {membrosEquipe.filter(m => (m.papel || m.role) === 'ADMIN').length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Operadores</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {membrosEquipe.filter(m => (m.papel || m.role) === 'OPERADOR').length}
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista da Equipe */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">Membros da Equipe</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Gerencie os operadores e gerentes do restaurante</p>
+                  </div>
+                  <button
+                    onClick={() => setMostrarModalOperador(true)}
+                    className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Adicionar Operador
+                  </button>
+                </div>
 
               <div className="overflow-x-auto">
                 {membrosEquipe.length === 0 ? (
@@ -473,6 +515,7 @@ function Gerenciamento() {
                 )}
               </div>
             </div>
+          </>
         )}
 
         {/* Aba Configurações */}
@@ -484,7 +527,7 @@ function Gerenciamento() {
                 <User className="w-5 h-5" />
                 Informações Básicas
               </h2>
-              <form onSubmit={handleSalvarConfiguracoes} className="space-y-5">
+              <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-2">Nome do Restaurante</label>
@@ -538,7 +581,7 @@ function Gerenciamento() {
                     placeholder="Rua Augusta, 1234 - São Paulo"
                   />
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Upload de Imagem do Restaurante */}
