@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { publicoService } from '../services/api';
-import { logger } from '../utils/logger';
 
 // ==========================================
 // 📡 CONFIGURAÇÃO DO WEBSOCKET
@@ -38,7 +37,7 @@ export const useWebSocket = ({
     let finalRestauranteId = restauranteId || localStorage.getItem('restauranteId');
     
     if (!finalRestauranteId && !restauranteSlug) {
-      logger.warn('⚠️ useWebSocket: Nem restauranteId nem restauranteSlug foram fornecidos');
+      console.warn('⚠️ useWebSocket: Nem restauranteId nem restauranteSlug foram fornecidos');
       return;
     }
 
@@ -49,18 +48,18 @@ export const useWebSocket = ({
       try {
         // Se não tem restauranteId, buscar pelo slug (fallback)
         if (!finalRestauranteId && restauranteSlug) {
-          logger.log(`🔍 Buscando restaurante por slug: ${restauranteSlug}`);
+          console.log(`🔍 Buscando restaurante por slug: ${restauranteSlug}`);
           const response = await publicoService.buscarRestaurantePorSlug(restauranteSlug);
           finalRestauranteId = response.restaurante.id;
-          logger.log(`✅ RestauranteId obtido via slug: ${finalRestauranteId}`);
+          console.log(`✅ RestauranteId obtido via slug: ${finalRestauranteId}`);
         } else {
-          logger.log(`✅ Usando RestauranteId: ${finalRestauranteId}`);
+          console.log(`✅ Usando RestauranteId: ${finalRestauranteId}`);
         }
         
         // 2. Namespace correto: /restaurante/{UUID}
         const namespace = `/restaurante/${finalRestauranteId}`;
         
-        logger.log(`🔌 Conectando WebSocket: ${apiUrl}${namespace}`);
+        console.log(`🔌 Conectando WebSocket: ${apiUrl}${namespace}`);
         
         socket = io(`${apiUrl}${namespace}`, {
           reconnection: true,
@@ -76,13 +75,13 @@ export const useWebSocket = ({
         // ==========================================
         
         socket.on('connect', () => {
-          logger.log('✅ WebSocket conectado:', socket.id);
+          console.log('✅ WebSocket conectado:', socket.id);
           setIsConnected(true);
           setError(null);
         });
 
         socket.on('disconnect', (reason) => {
-          logger.warn('❌ WebSocket desconectado:', reason);
+          console.warn('❌ WebSocket desconectado:', reason);
           setIsConnected(false);
           
           if (reason === 'io server disconnect') {
@@ -91,29 +90,29 @@ export const useWebSocket = ({
         });
 
         socket.on('connect_error', (err) => {
-          logger.error('🔴 Erro de conexão WebSocket:', err.message);
+          console.error('🔴 Erro de conexão WebSocket:', err.message);
           setError(err);
           setIsConnected(false);
         });
 
         socket.on('reconnect', (attemptNumber) => {
-          logger.log(`🔄 Reconectado após ${attemptNumber} tentativa(s)`);
+          console.log(`🔄 Reconectado após ${attemptNumber} tentativa(s)`);
           setError(null);
         });
 
         socket.on('reconnect_attempt', (attemptNumber) => {
-          logger.log(`🔄 Tentando reconectar... (${attemptNumber}/5)`);
+          console.log(`🔄 Tentando reconectar... (${attemptNumber}/5)`);
         });
 
         socket.on('reconnect_failed', () => {
-          logger.error('❌ Falha ao reconectar após 5 tentativas');
+          console.error('❌ Falha ao reconectar após 5 tentativas');
           setError(new Error('Não foi possível reconectar ao servidor'));
         });
 
         socketRef.current = socket;
         
       } catch (err) {
-        logger.error('❌ Erro ao buscar restauranteId:', err);
+        console.error('❌ Erro ao buscar restauranteId:', err);
         setError(err);
       }
     };
@@ -123,7 +122,7 @@ export const useWebSocket = ({
     // Cleanup ao desmontar componente
     return () => {
       if (socketRef.current) {
-        logger.log('🔌 Desconectando WebSocket...');
+        console.log('🔌 Desconectando WebSocket...');
         socketRef.current.disconnect();
       }
     };
@@ -142,7 +141,7 @@ export const useWebSocket = ({
     if (socketRef.current) {
       socketRef.current.on(event, callback);
     } else {
-      logger.warn('⚠️ Socket não inicializado. Não foi possível registrar evento:', event);
+      console.warn('⚠️ Socket não inicializado. Não foi possível registrar evento:', event);
     }
   };
 
@@ -166,7 +165,7 @@ export const useWebSocket = ({
     if (socketRef.current && isConnected) {
       socketRef.current.emit(event, data);
     } else {
-      logger.warn('⚠️ Socket não conectado. Não foi possível emitir evento:', event);
+      console.warn('⚠️ Socket não conectado. Não foi possível emitir evento:', event);
     }
   };
 

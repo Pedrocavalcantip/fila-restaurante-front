@@ -31,16 +31,16 @@ export default function EntrarNaFila() {
         observacoes: observacoes || undefined // Enviar apenas se preenchido
       };
 
-      logger.log('📤 Entrando na fila:', { slug, payload });
+      console.log('📤 Entrando na fila:', { slug, payload });
       
       const response = await clienteService.entrarNaFila(slug, payload);
       
-      logger.log('✅ Ticket criado:', response);
+      console.log('✅ Ticket criado:', response);
       
       // Redirecionar para acompanhar fila
       navigate('/cliente/meu-ticket');
     } catch (error) {
-      logger.error('❌ Erro ao entrar na fila:', error);
+      console.error('❌ Erro ao entrar na fila:', error);
       const mensagem = error.response?.data?.message || 'Erro ao entrar na fila. Tente novamente.';
       setErro(mensagem);
     } finally {

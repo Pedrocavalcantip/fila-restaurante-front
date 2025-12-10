@@ -49,7 +49,7 @@ export default function LoginRestaurante() {
         navigate('/restaurante/painel-operador');
       }
     } catch (error) {
-      logger.error('Erro ao fazer login:', error);
+      console.error('Erro ao fazer login:', error);
       let mensagem = 'Credenciais inválidas ou restaurante não encontrado.';
       
       if (error.response?.data) {

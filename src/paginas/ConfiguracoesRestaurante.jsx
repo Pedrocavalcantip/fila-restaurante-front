@@ -45,7 +45,7 @@ export default function ConfiguracoesRestaurante() {
         setImagemPreview(response.imagem);
       }
     } catch (error) {
-      logger.error('Erro ao carregar configurações:', error);
+      console.error('Erro ao carregar configurações:', error);
       
       if (error.response?.status === 404) {
         alert('⚠️ Restaurante não encontrado.\n\nFaça logout e login novamente.');
@@ -129,7 +129,7 @@ export default function ConfiguracoesRestaurante() {
       alert('Configurações salvas com sucesso!');
       await carregarConfiguracoes(); // Recarregar dados
     } catch (error) {
-      logger.error('Erro ao salvar configurações:', error);
+      console.error('Erro ao salvar configurações:', error);
       alert('Erro ao salvar configurações. Tente novamente.');
     } finally {
       setSalvando(false);
