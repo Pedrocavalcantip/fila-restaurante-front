@@ -8,39 +8,26 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
-console.log('🌐 API URL configurada:', API_URL);
-
 const api = axios.create({
   baseURL: API_URL,
 });
 
 // Adiciona o Token automaticamente em rotas privadas
 api.interceptors.request.use((config) => {
-  // Busca token único (usado por Admin, Operador e Cliente)
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
-    console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
-  } else {
-    console.warn('⚠️ Nenhum token encontrado no localStorage');
   }
-  console.log(`📤 ${config.method.toUpperCase()} ${config.url}`, config.data || '');
   return config;
 });
 
-// Interceptor de resposta para logs de erro
+// Interceptor de resposta para tratamento de erros
 api.interceptors.response.use(
-  (response) => {
-    console.log(`✅ ${response.config.method.toUpperCase()} ${response.config.url} - ${response.status}`);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.response) {
-      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response.status}`, error.response.data);
-    } else if (error.request) {
-      console.error(`❌ ${error.config?.method?.toUpperCase()} ${error.config?.url} - Sem resposta do servidor`, error.message);
-    } else {
-      console.error('❌ Erro na requisição:', error.message);
+    // Apenas loga erros críticos em produção
+    if (import.meta.env.MODE === 'development') {
+      console.error('API Error:', error);
     }
     return Promise.reject(error);
   }
