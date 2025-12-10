@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="#f97316" />
+  
+  <!-- Fork (left) -->
+  <g fill="white">
+    <rect x="35" y="30" width="2" height="35" rx="1" />
+    <rect x="33" y="28" width="2" height="15" rx="1" />
+    <rect x="37" y="28" width="2" height="15" rx="1" />
+  </g>
+  
+  <!-- Knife (right) -->
+  <g fill="white">
+    <rect x="63" y="30" width="2" height="35" rx="1" />
+    <path d="M 60 28 L 60 38 L 66 38 L 66 28 Z" />
+  </g>
+  
+  <!-- Plate (bottom) -->
+  <ellipse cx="50" cy="72" rx="18" ry="3" fill="white" opacity="0.8" />
+</svg>
