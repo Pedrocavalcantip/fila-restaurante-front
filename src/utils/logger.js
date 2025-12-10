@@ -1,5 +1,5 @@
 // ==========================================
-// 📝 LOGGER - Logs apenas em desenvolvimento
+// LOGGER - Logs apenas em desenvolvimento
 // ==========================================
 // Em produção (deploy), os logs não aparecem no console
 
