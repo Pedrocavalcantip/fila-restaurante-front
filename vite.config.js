@@ -4,17 +4,39 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  
+  // Build otimizado para produção
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['lucide-react'],
+        },
+      },
+    },
+  },
+  
+  // Servidor de desenvolvimento
   server: {
-    host: '0.0.0.0', // ← Permite acesso externo (outros dispositivos na rede)
+    host: '0.0.0.0',
     port: 3001,
+    // Proxy só funciona em desenvolvimento
+    // Em produção, VITE_API_URL aponta direto para o backend
     proxy: {
-      // Redireciona chamadas /api/* para o backend em localhost:3000
-      // Evita problemas de CORS em desenvolvimento sem alterar o backend
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
       }
     }
+  },
+  
+  // Preview (testar build localmente)
+  preview: {
+    port: 3001,
   },
 })

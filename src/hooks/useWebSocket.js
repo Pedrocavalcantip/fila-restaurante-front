@@ -2,17 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import { publicoService } from '../services/api';
 
+// ==========================================
+// 📡 CONFIGURAÇÃO DO WEBSOCKET
+// ==========================================
+// VITE_WS_URL: URL do servidor WebSocket (mesmo servidor do backend)
+// Em desenvolvimento: http://localhost:3000
+// Em produção: https://seu-backend.up.railway.app
+
+const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+
 /**
  * Hook para gerenciar conexão WebSocket com o backend
  * @param {Object} options - Opções de configuração
- * @param {string} options.restauranteSlug - Slug do restaurante para buscar o ID
- * @param {string} [options.apiUrl] - URL base do backend (padrão: http://localhost:3000)
+ * @param {string} options.restauranteSlug - Slug do restaurante (DEPRECADO - usar restauranteId)
+ * @param {string} options.restauranteId - ID do restaurante (UUID)
+ * @param {string} [options.apiUrl] - URL base do backend (usa VITE_WS_URL por padrão)
  * @param {boolean} [options.autoConnect] - Conectar automaticamente (padrão: true)
  * @returns {Object} { socket, isConnected, error, on, off, emit }
  */
 export const useWebSocket = ({
   restauranteSlug,
-  apiUrl = 'http://localhost:3000',
+  restauranteId,
+  apiUrl = WS_URL,
   autoConnect = true
 }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -20,22 +31,33 @@ export const useWebSocket = ({
   const socketRef = useRef(null);
 
   useEffect(() => {
-    if (!autoConnect || !restauranteSlug) return;
+    if (!autoConnect) return;
+
+    // Priorizar restauranteId passado como prop ou do localStorage
+    let finalRestauranteId = restauranteId || localStorage.getItem('restauranteId');
+    
+    if (!finalRestauranteId && !restauranteSlug) {
+      console.warn('⚠️ useWebSocket: Nem restauranteId nem restauranteSlug foram fornecidos');
+      return;
+    }
 
     let socket = null;
 
     // Função assíncrona para buscar o restauranteId e conectar
     const conectarWebSocket = async () => {
       try {
-        // 1. Buscar restaurante por slug para obter o ID
-        console.log(`🔍 Buscando restaurante por slug: ${restauranteSlug}`);
-        const response = await publicoService.buscarRestaurantePorSlug(restauranteSlug);
-        const restauranteId = response.restaurante.id;
-        
-        console.log(`✅ RestauranteId obtido: ${restauranteId}`);
+        // Se não tem restauranteId, buscar pelo slug (fallback)
+        if (!finalRestauranteId && restauranteSlug) {
+          console.log(`🔍 Buscando restaurante por slug: ${restauranteSlug}`);
+          const response = await publicoService.buscarRestaurantePorSlug(restauranteSlug);
+          finalRestauranteId = response.restaurante.id;
+          console.log(`✅ RestauranteId obtido via slug: ${finalRestauranteId}`);
+        } else {
+          console.log(`✅ Usando RestauranteId: ${finalRestauranteId}`);
+        }
         
         // 2. Namespace correto: /restaurante/{UUID}
-        const namespace = `/restaurante/${restauranteId}`;
+        const namespace = `/restaurante/${finalRestauranteId}`;
         
         console.log(`🔌 Conectando WebSocket: ${apiUrl}${namespace}`);
         

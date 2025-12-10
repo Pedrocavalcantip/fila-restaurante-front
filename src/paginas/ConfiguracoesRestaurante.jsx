@@ -140,46 +140,54 @@ export default function ConfiguracoesRestaurante() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando configurações...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando configurações...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950">
+      {/* Ambient Lights */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="relative bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => navigate('/restaurante/painel-operador')}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <ArrowLeft size={20} />
             <span className="font-medium">Voltar</span>
           </button>
           
-          <h1 className="text-lg font-bold text-gray-900">Configurações do Restaurante</h1>
+          <h1 className="text-lg font-bold text-white">Configurações do Restaurante</h1>
           
           <div className="w-20"></div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="relative max-w-7xl mx-auto px-4 py-6">
         <form onSubmit={handleSalvar} className="space-y-6">
           {/* Upload de Imagem */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Building2 size={24} className="text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Imagem do Restaurante *</h2>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <Building2 size={20} className="text-orange-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Imagem do Restaurante *</h2>
             </div>
 
             {/* Preview da imagem */}
             {imagemPreview && (
-              <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-300">
+              <div className="mb-4 relative w-full h-48 rounded-xl overflow-hidden border-2 border-gray-700">
                 <img 
                   src={imagemPreview} 
                   alt="Preview" 
@@ -200,12 +208,12 @@ export default function ConfiguracoesRestaurante() {
             <div className="flex items-center justify-center w-full">
               <label 
                 htmlFor="imagem-config" 
-                className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors ${imagemPreview ? 'hidden' : ''}`}
+                className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-xl cursor-pointer bg-gray-800/50 hover:bg-gray-800 transition-colors ${imagemPreview ? 'hidden' : ''}`}
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Building2 className="w-10 h-10 mb-3 text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-500">
-                    <span className="font-semibold">Clique para fazer upload</span> ou arraste e solte
+                  <Building2 className="w-10 h-10 mb-3 text-gray-500" />
+                  <p className="mb-2 text-sm text-gray-400">
+                    <span className="font-semibold text-orange-400">Clique para fazer upload</span> ou arraste e solte
                   </p>
                   <p className="text-xs text-gray-500">PNG, JPG ou WEBP (máx. 5MB)</p>
                 </div>
@@ -220,33 +228,35 @@ export default function ConfiguracoesRestaurante() {
             </div>
             
             <p className="text-xs text-gray-500 mt-2">
-              <strong>* Campo obrigatório:</strong> A imagem será exibida na lista de restaurantes disponíveis para os clientes
+              <strong className="text-gray-400">* Campo obrigatório:</strong> A imagem será exibida na lista de restaurantes disponíveis para os clientes
             </p>
           </div>
 
           {/* Informações Básicas */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Store size={24} className="text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Informações Básicas</h2>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <Store size={20} className="text-orange-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Informações Básicas</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nome do Restaurante *
                 </label>
                 <input
                   type="text"
                   value={configuracoes.nome}
                   onChange={(e) => handleChange('nome', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Telefone *
                 </label>
                 <input
@@ -254,7 +264,7 @@ export default function ConfiguracoesRestaurante() {
                   value={configuracoes.telefone}
                   onChange={(e) => handleChange('telefone', e.target.value)}
                   placeholder="(00) 00000-0000"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   required
                 />
               </div>
@@ -262,15 +272,17 @@ export default function ConfiguracoesRestaurante() {
           </div>
 
           {/* Precificação */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
-              <DollarSign size={24} className="text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Precificação</h2>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <DollarSign size={20} className="text-orange-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Precificação</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Preço Fast Lane (R$)
                 </label>
                 <input
@@ -278,7 +290,7 @@ export default function ConfiguracoesRestaurante() {
                   step="0.01"
                   value={configuracoes.precoFastlane}
                   onChange={(e) => handleChange('precoFastlane', parseFloat(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   placeholder="15.00"
                 />
                 <p className="text-xs text-gray-500 mt-1">Valor cobrado para entrada prioritária</p>
@@ -287,36 +299,38 @@ export default function ConfiguracoesRestaurante() {
           </div>
 
           {/* Limites e Capacidade */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Users size={24} className="text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Limites e Capacidade</h2>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <Users size={20} className="text-orange-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Limites e Capacidade</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Máximo de Tickets por Hora
                 </label>
                 <input
                   type="number"
                   value={configuracoes.maxTicketsPorHora}
                   onChange={(e) => handleChange('maxTicketsPorHora', parseInt(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   min="1"
                 />
                 <p className="text-xs text-gray-500 mt-1">Capacidade de atendimento por hora</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Máximo de Reentradas por Dia
                 </label>
                 <input
                   type="number"
                   value={configuracoes.maxReentradasPorDia}
                   onChange={(e) => handleChange('maxReentradasPorDia', parseInt(e.target.value))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                   min="0"
                 />
                 <p className="text-xs text-gray-500 mt-1">Limite de vezes que um cliente pode entrar na fila no mesmo dia</p>
@@ -325,21 +339,23 @@ export default function ConfiguracoesRestaurante() {
           </div>
 
           {/* Mensagem de Boas-Vindas */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-6">
-              <Mail size={24} className="text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">Mensagem de Boas-Vindas</h2>
+              <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <Mail size={20} className="text-orange-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white">Mensagem de Boas-Vindas</h2>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Mensagem Personalizada
               </label>
               <textarea
                 value={configuracoes.mensagemBoasVindas}
                 onChange={(e) => handleChange('mensagemBoasVindas', e.target.value)}
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
                 placeholder="Digite uma mensagem para seus clientes..."
               />
               <p className="text-xs text-gray-500 mt-1">Esta mensagem será exibida aos clientes ao entrar na fila</p>
@@ -351,7 +367,7 @@ export default function ConfiguracoesRestaurante() {
             <button
               type="submit"
               disabled={salvando}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={20} />
               {salvando ? 'Salvando...' : 'Salvar Configurações'}

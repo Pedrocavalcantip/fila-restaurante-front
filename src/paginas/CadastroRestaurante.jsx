@@ -218,38 +218,44 @@ export default function CadastroRestaurante() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 flex items-center justify-center p-6 py-12">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6 py-12 relative">
+      {/* Ambient Lights */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="w-full max-w-2xl relative z-10">
         {/* Botão Voltar */}
         <Link 
           to="/restaurante/login" 
-          className="inline-flex items-center gap-1.5 text-gray-700 hover:text-gray-900 mb-6 transition-colors text-sm"
+          className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white mb-6 transition-colors text-sm"
         >
           <ArrowLeft size={16} />
           <span>Voltar</span>
         </Link>
 
         {/* Card de Cadastro */}
-        <div className="bg-white rounded-xl shadow-md p-8">
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl shadow-xl p-8">
           {/* Ícone de Restaurante */}
           <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-              <Building2 size={32} className="text-orange-600" strokeWidth={2} />
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/25">
+              <Building2 size={32} className="text-white" strokeWidth={2} />
             </div>
           </div>
 
           {/* Título */}
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">
+          <h1 className="text-2xl font-bold text-center text-white mb-1">
             Cadastrar Restaurante
           </h1>
-          <p className="text-center text-gray-500 text-sm mb-6">
+          <p className="text-center text-gray-400 text-sm mb-6">
             Preencha os dados abaixo para começar a gerenciar suas filas
           </p>
 
           {/* Mensagem de Sucesso */}
           {sucesso && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600 text-center font-medium">
+            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+              <p className="text-sm text-green-400 text-center font-medium">
                 Restaurante cadastrado com sucesso! Redirecionando...
               </p>
             </div>
@@ -257,8 +263,8 @@ export default function CadastroRestaurante() {
 
           {/* Mensagem de Erro */}
           {erro && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600 text-center">{erro}</p>
+            <div className="mb-6 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+              <p className="text-sm text-red-400 text-center">{erro}</p>
             </div>
           )}
 
@@ -266,44 +272,44 @@ export default function CadastroRestaurante() {
           <form onSubmit={handleCadastro} className="space-y-6">
             {/* DADOS DA EMPRESA */}
             <div>
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 Dados da Empresa
               </h2>
               
               <div className="space-y-4">
                 {/* Nome do Restaurante */}
                 <div>
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="nome" className="block text-sm font-medium text-gray-300 mb-1">
                     Nome do Restaurante *
                   </label>
                   <input
                     id="nome"
                     name="nome"
                     type="text"
-                    placeholder="Ex: Trattoria Bella Vista"
+                    placeholder=""
                     value={formData.nome}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                   />
                 </div>
 
                 {/* Slug (Auto-gerado) */}
                 <div>
-                  <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="slug" className="block text-sm font-medium text-gray-300 mb-1">
                     Identificador (Slug) *
                   </label>
                   <input
                     id="slug"
                     name="slug"
                     type="text"
-                    placeholder="trattoria-bella-vista"
+                    placeholder="restaurante-exemplo"
                     value={formData.slug}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-700 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/70 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-slate-300 placeholder:text-slate-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Gerado automaticamente. Use apenas letras minúsculas, números e hífens.
                   </p>
                 </div>
@@ -311,7 +317,7 @@ export default function CadastroRestaurante() {
                 {/* CNPJ e Telefone */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="cnpj" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="cnpj" className="block text-sm font-medium text-gray-300 mb-1">
                       CNPJ *
                     </label>
                     <input
@@ -322,22 +328,22 @@ export default function CadastroRestaurante() {
                       value={formData.cnpj}
                       onChange={handleCNPJChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="telefone" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="telefone" className="block text-sm font-medium text-slate-300 mb-1">
                       Telefone Comercial *
                     </label>
                     <input
                       id="telefone"
                       name="telefone"
                       type="text"
-                      placeholder="(11) 98765-4321"
+                      placeholder="Digite seu telefone"
                       value={formData.telefone}
                       onChange={handleTelefoneChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                     />
                   </div>
                 </div>
@@ -346,14 +352,14 @@ export default function CadastroRestaurante() {
 
             {/* CONFIGURAÇÕES DE FILA */}
             <div>
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 Configurações de Fila
               </h2>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="precoFastlane" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="precoFastlane" className="block text-sm font-medium text-gray-300 mb-1">
                       Preço Fast Lane (R$) *
                     </label>
                     <input
@@ -365,11 +371,11 @@ export default function CadastroRestaurante() {
                       value={formData.precoFastlane}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white"
                     />
                   </div>
                   <div>
-                    <label htmlFor="maxReentradasPorDia" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="maxReentradasPorDia" className="block text-sm font-medium text-slate-300 mb-1">
                       Max. Reentradas/Dia *
                     </label>
                     <input
@@ -380,7 +386,7 @@ export default function CadastroRestaurante() {
                       value={formData.maxReentradasPorDia}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white"
                     />
                   </div>
                 </div>
@@ -392,98 +398,98 @@ export default function CadastroRestaurante() {
 
             {/* ENDEREÇO */}
             <div>
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 Endereço
               </h2>
               
               <div className="space-y-4">
                 {/* CEP */}
                 <div>
-                  <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="cep" className="block text-sm font-medium text-gray-300 mb-1">
                     CEP *
                   </label>
                   <input
                     id="cep"
                     name="cep"
                     type="text"
-                    placeholder="00000-000"
+                    placeholder=""
                     value={formData.cep}
                     onChange={handleCEPChange}
                     required
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                   />
                 </div>
 
                 {/* Rua e Número */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
-                    <label htmlFor="rua" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="rua" className="block text-sm font-medium text-gray-300 mb-1">
                       Rua *
                     </label>
                     <input
                       id="rua"
                       name="rua"
                       type="text"
-                      placeholder="Av. Paulista"
+                      placeholder=""
                       value={formData.rua}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="numero" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="numero" className="block text-sm font-medium text-slate-300 mb-1">
                       Número *
                     </label>
                     <input
                       id="numero"
                       name="numero"
                       type="text"
-                      placeholder="1000"
+                      placeholder=""
                       value={formData.numero}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                     />
                   </div>
                 </div>
 
                 {/* Bairro */}
                 <div>
-                  <label htmlFor="bairro" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="bairro" className="block text-sm font-medium text-gray-300 mb-1">
                     Bairro *
                   </label>
                   <input
                     id="bairro"
                     name="bairro"
                     type="text"
-                    placeholder="Bela Vista"
+                    placeholder=""
                     value={formData.bairro}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                   />
                 </div>
 
                 {/* Cidade e Estado */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-2">
-                    <label htmlFor="cidade" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="cidade" className="block text-sm font-medium text-gray-300 mb-1">
                       Cidade *
                     </label>
                     <input
                       id="cidade"
                       name="cidade"
                       type="text"
-                      placeholder="São Paulo"
+                      placeholder=""
                       value={formData.cidade}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                     />
                   </div>
                   <div>
-                    <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="estado" className="block text-sm font-medium text-slate-300 mb-1">
                       Estado *
                     </label>
                     <select
@@ -492,10 +498,10 @@ export default function CadastroRestaurante() {
                       value={formData.estado}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900"
+                      className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white"
                     >
                       {estados.map((estado) => (
-                        <option key={estado} value={estado}>
+                        <option key={estado} value={estado} className="bg-slate-800 text-white">
                           {estado}
                         </option>
                       ))}
@@ -507,34 +513,34 @@ export default function CadastroRestaurante() {
 
             {/* DADOS DO ADMINISTRADOR */}
             <div>
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
                 Dados do Administrador
               </h2>
               
               <div className="space-y-4">
                 {/* Email de Acesso */}
                 <div>
-                  <label htmlFor="emailAdmin" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="emailAdmin" className="block text-sm font-medium text-gray-300 mb-1">
                     E-mail do Administrador *
                   </label>
                   <input
                     id="emailAdmin"
                     name="emailAdmin"
                     type="email"
-                    placeholder="admin@restaurante.com"
+                    placeholder=""
                     value={formData.emailAdmin}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Este será o login do administrador principal
                   </p>
                 </div>
 
                 {/* Senha */}
                 <div>
-                  <label htmlFor="senhaAdmin" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="senhaAdmin" className="block text-sm font-medium text-slate-300 mb-1">
                     Senha do Administrador *
                   </label>
                   <input
@@ -546,7 +552,7 @@ export default function CadastroRestaurante() {
                     onChange={handleChange}
                     required
                     minLength={8}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
+                    className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 outline-none transition-all text-sm text-white placeholder:text-slate-500"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Use pelo menos 8 caracteres com letras e números
@@ -556,22 +562,22 @@ export default function CadastroRestaurante() {
             </div>
 
             {/* Box de Benefícios */}
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CheckCircle2 size={18} className="text-orange-600" />
+            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <CheckCircle2 size={18} className="text-purple-400" />
                 O que você terá acesso:
               </h3>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-gray-300">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
                   <span>Painel completo para gerenciar filas em tempo real</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
                   <span>Sistema Fast-Lane para gerar receita adicional</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                  <CheckCircle2 size={16} className="text-green-400 mt-0.5 flex-shrink-0" />
                   <span>Gestão de equipe e permissões</span>
                 </li>
               </ul>
@@ -581,18 +587,23 @@ export default function CadastroRestaurante() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-3 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-lg shadow-purple-500/25"
             >
-              {loading ? 'Criando...' : 'Criar Restaurante'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Criando...
+                </span>
+              ) : 'Criar Restaurante'}
             </button>
           </form>
 
           {/* Link para Login */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-slate-400">
             Já tem uma conta?{' '}
             <Link 
               to="/restaurante/login" 
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+              className="text-purple-400 hover:text-purple-300 font-medium transition-colors"
             >
               Faça login
             </Link>

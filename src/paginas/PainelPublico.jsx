@@ -94,16 +94,20 @@ export default function PainelPublico() {
         return;
       }
 
-      // Buscar tickets da fila com status CHAMADO
-      const response = await ticketService.listarTickets(filaId);
+      // Buscar tickets da fila - usa mesma rota do PainelOperador
+      const response = await ticketService.listarFilaAtiva(filaId);
+      
+      // A resposta vem como { tickets: [...], fila: {...}, estatisticas: {...} }
+      const todosTickets = response.tickets || response || [];
       
       // Filtrar apenas tickets chamados e ordenar por mais recente
-      const ticketsChamados = response
+      const ticketsFiltrados = todosTickets
         .filter(ticket => ticket.status === 'CHAMADO')
-        .sort((a, b) => new Date(b.chamadoEm) - new Date(a.chamadoEm))
+        .sort((a, b) => new Date(b.chamadoEm || b.atualizadoEm) - new Date(a.chamadoEm || a.atualizadoEm))
         .slice(0, 10); // Últimos 10 tickets chamados
       
-      setTicketsChamados(ticketsChamados);
+      console.log('📺 Painel TV - Tickets chamados:', ticketsFiltrados.length);
+      setTicketsChamados(ticketsFiltrados);
     } catch (error) {
       console.error('❌ Erro ao carregar tickets:', error);
     }
@@ -138,34 +142,40 @@ export default function PainelPublico() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 text-white overflow-hidden">
+      {/* Ambient Lights */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-black bg-opacity-50 backdrop-blur-md border-b border-gray-700">
+      <header className="relative bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="container mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors px-4 py-2 rounded-lg hover:bg-white hover:bg-opacity-10"
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-xl hover:bg-gray-800/50"
             >
               <ArrowLeft size={24} />
               <span className="text-lg font-medium">Voltar</span>
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-orange-600 rounded-xl flex items-center justify-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/25">
                 <Bell size={32} className="text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold">Painel de Chamadas</h1>
+                <h1 className="text-4xl font-bold text-white">Painel de Chamadas</h1>
                 <p className="text-gray-400 text-lg">Acompanhe sua vez</p>
               </div>
             </div>
             
             <div className="text-right">
-              <div className="flex items-center gap-3 text-gray-300 mb-1">
+              <div className="flex items-center gap-3 text-gray-400 mb-1">
                 <Clock size={24} />
                 <span className="text-2xl font-medium">Horário Atual</span>
               </div>
-              <div className="text-5xl font-bold text-orange-500 font-mono">
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-400 font-mono">
                 {formatarHora(horaAtual)}
               </div>
             </div>
@@ -174,17 +184,19 @@ export default function PainelPublico() {
       </header>
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-8 py-12">
+      <main className="relative container mx-auto px-8 py-12">
         {ticketsChamados.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <Bell size={120} className="text-gray-600 mb-6" />
+            <div className="w-32 h-32 bg-gray-800/50 rounded-3xl flex items-center justify-center mb-6">
+              <Bell size={64} className="text-gray-600" />
+            </div>
             <h2 className="text-4xl font-bold text-gray-400 mb-2">Aguardando Chamadas</h2>
             <p className="text-xl text-gray-500">Os tickets chamados aparecerão aqui</p>
           </div>
         ) : (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-300">Tickets Chamados Recentemente</h2>
+              <h2 className="text-3xl font-bold text-white">Tickets Chamados Recentemente</h2>
             </div>
 
             <div className="grid gap-6">
@@ -219,7 +231,7 @@ export default function PainelPublico() {
                         </div>
                         <div className="text-sm opacity-75 mb-1">TICKET</div>
                         <div className="text-8xl font-black tracking-wider font-mono">
-                          #{ticket.numero}
+                          #{ticket.numeroTicket}
                         </div>
                         <div className="text-2xl font-medium mt-3 opacity-90">
                           Fila: {ticket.fila}
@@ -245,7 +257,7 @@ export default function PainelPublico() {
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-md border-t border-gray-700 py-4">
+      <footer className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-xl border-t border-gray-800/50 py-4">
         <div className="container mx-auto px-8">
           <div className="flex items-center justify-between text-gray-400">
             <div className="flex items-center gap-2">

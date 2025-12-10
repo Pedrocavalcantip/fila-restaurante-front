@@ -29,9 +29,8 @@ function Gerenciamento() {
   const [configuracoes, setConfiguracoes] = useState({
     nome: '',
     slug: '',
-    telefone: '',
-    endereco: '',
-    imagem: '',
+    cidade: '',
+    estado: '',
     capacidade: 50,
     precoFastlane: 15.00,
     maxReentradasPorDia: 3,
@@ -93,20 +92,14 @@ function Gerenciamento() {
       setConfiguracoes({
         nome: rest.nome || '',
         slug: rest.slug || '',
-        telefone: rest.telefone || '',
-        endereco: enderecoCompleto,
-        imagem: rest.imagem || '',
+        cidade: rest.cidade || '',
+        estado: rest.estado || '',
         capacidade: rest.maxTicketsPorHora || 50, // Backend usa maxTicketsPorHora
-        precoFastlane: rest.precoFastlane || 15.00,
+        precoFastlane: rest.precoFastlane || rest.precoFastLane || 15.00,
         maxReentradasPorDia: rest.maxReentradasPorDia || 3,
         mensagemBoasVindas: rest.mensagemBoasVindas || '',
         horarios: horariosParsed
       });
-      
-      // Carregar preview da imagem existente
-      if (rest.imagem) {
-        setImagemPreview(rest.imagem);
-      }
       
       // Carregar equipe do backend
       try {
@@ -321,32 +314,38 @@ function Gerenciamento() {
   // Tela de loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dados do gerenciamento...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Carregando dados do gerenciamento...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950">
+      {/* Ambient Lights */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="relative bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/restaurante/painel')}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center text-gray-400 hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Voltar
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Equipe e Filas</h1>
-                <p className="text-sm text-gray-600">Configure sua equipe e filas do restaurante</p>
+                <h1 className="text-2xl font-bold text-white">Gerenciamento de Equipe e Filas</h1>
+                <p className="text-sm text-gray-400">Configure sua equipe e filas do restaurante</p>
               </div>
             </div>
           </div>
@@ -354,15 +353,15 @@ function Gerenciamento() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="relative bg-gray-900/50 backdrop-blur-sm border-b border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-8">
             <button
               onClick={() => setAbaAtiva('equipe')}
               className={`py-4 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 abaAtiva === 'equipe'
-                  ? 'border-orange-600 text-orange-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
               <User className="w-4 h-4" />
@@ -372,8 +371,8 @@ function Gerenciamento() {
               onClick={() => setAbaAtiva('configuracoes')}
               className={`py-4 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 abaAtiva === 'configuracoes'
-                  ? 'border-orange-600 text-orange-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+                  ? 'border-orange-500 text-orange-400'
+                  : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
               <Settings className="w-4 h-4" />
@@ -384,63 +383,21 @@ function Gerenciamento() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Aba Equipe */}
         {abaAtiva === 'equipe' && (
           <>
-            {/* Estatísticas da Equipe */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Total de Membros</p>
-                    <p className="text-2xl font-bold text-gray-900">{membrosEquipe.length}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-orange-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Administradores</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {membrosEquipe.filter(m => (m.papel || m.role) === 'ADMIN').length}
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Settings className="w-5 h-5 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Operadores</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {membrosEquipe.filter(m => (m.papel || m.role) === 'OPERADOR').length}
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <UserPlus className="w-5 h-5 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
+            
             {/* Lista da Equipe */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl">
+              <div className="px-6 py-4 border-b border-gray-800/50 flex items-center justify-between">
                   <div>
-                    <h2 className="text-base font-bold text-gray-900">Membros da Equipe</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">Gerencie os operadores e gerentes do restaurante</p>
+                    <h2 className="text-base font-bold text-white">Membros da Equipe</h2>
+                    <p className="text-xs text-gray-400 mt-0.5">Gerencie os operadores e gerentes do restaurante</p>
                   </div>
                   <button
                     onClick={() => setMostrarModalOperador(true)}
-                    className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all text-sm font-medium shadow-lg shadow-orange-500/25"
                   >
                     <UserPlus className="w-4 h-4" />
                     Adicionar Operador
@@ -449,50 +406,50 @@ function Gerenciamento() {
 
               <div className="overflow-x-auto">
                 {membrosEquipe.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg">
-                    <User className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <div className="text-center py-12 bg-gray-800/30 rounded-b-2xl">
+                    <User className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-white mb-2">
                       Nenhum membro na equipe
                     </h3>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-gray-400 mb-4">
                       A rota de listagem de equipe ainda não está implementada no backend.
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Implemente GET /api/v1/restaurantes/equipe no backend para ver a lista.
                     </p>
                   </div>
                 ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-800/50 border-b border-gray-700/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Nome
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Email
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Ações
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-800/50">
                     {membrosEquipe.map((membro) => (
-                      <tr key={membro.id} className="hover:bg-gray-50 transition-colors">
+                      <tr key={membro.id} className="hover:bg-gray-800/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">{membro.nome}</span>
+                          <span className="text-sm font-medium text-white">{membro.nome}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-600">{membro.email}</span>
+                          <span className="text-sm text-gray-400">{membro.email}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                             (membro.papel || membro.role) === 'ADMIN'
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-orange-100 text-orange-800'
+                              ? 'bg-purple-500/20 text-purple-400'
+                              : 'bg-orange-500/20 text-orange-400'
                           }`}>
                             {membro.papel || membro.role}
                           </span>
@@ -501,7 +458,7 @@ function Gerenciamento() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => abrirModalExcluir(membro)}
-                              className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                              className="p-2 text-gray-500 hover:text-red-400 transition-colors"
                               title="Remover membro"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -522,78 +479,83 @@ function Gerenciamento() {
         {abaAtiva === 'configuracoes' && (
           <div className="space-y-6">
             {/* Informações Básicas */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <User className="w-5 h-5" />
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <User className="w-5 h-5 text-orange-400" />
                 Informações Básicas
               </h2>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Nome do Restaurante</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Nome do Restaurante</label>
                     <input
                       type="text"
                       value={configuracoes.nome}
                       onChange={(e) => setConfiguracoes({...configuracoes, nome: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white placeholder:text-gray-500"
                       placeholder="Ex: Trattoria Bella Vista"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Slug (URL)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Slug (URL)</label>
                     <input
                       type="text"
                       value={configuracoes.slug}
                       onChange={(e) => setConfiguracoes({...configuracoes, slug: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none bg-gray-50"
+                      className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-500 cursor-not-allowed"
                       placeholder="trattoria-bella-vista"
                       disabled
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Telefone</label>
-                    <input
-                      type="tel"
-                      value={configuracoes.telefone}
-                      onChange={(e) => setConfiguracoes({...configuracoes, telefone: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                      placeholder="11987654321"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">Capacidade (mesas/pessoas)</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Capacidade (tickets/hora)</label>
                     <input
                       type="number"
                       value={configuracoes.capacidade}
                       onChange={(e) => setConfiguracoes({...configuracoes, capacidade: parseInt(e.target.value)})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                      className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white"
                       placeholder="50"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Endereço Completo</label>
-                  <input
-                    type="text"
-                    value={configuracoes.endereco}
-                    onChange={(e) => setConfiguracoes({...configuracoes, endereco: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                    placeholder="Rua Augusta, 1234 - São Paulo"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Cidade</label>
+                    <input
+                      type="text"
+                      value={configuracoes.cidade}
+                      className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-500 cursor-not-allowed"
+                      placeholder="Recife"
+                      disabled
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Estado</label>
+                    <input
+                      type="text"
+                      value={configuracoes.estado}
+                      className="w-full px-4 py-3 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-500 cursor-not-allowed"
+                      placeholder="PE"
+                      disabled
+                    />
+                  </div>
                 </div>
+                <p className="text-xs text-gray-500">
+                  Cidade e Estado foram definidos no cadastro do restaurante e não podem ser alterados.
+                </p>
               </div>
             </div>
 
             {/* Upload de Imagem do Restaurante */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-orange-400" />
                 Imagem do Restaurante *
               </h2>
 
               {/* Preview da imagem */}
               {imagemPreview && (
-                <div className="mb-4 relative w-full h-48 rounded-lg overflow-hidden border-2 border-gray-300">
+                <div className="mb-4 relative w-full h-48 rounded-xl overflow-hidden border border-gray-700">
                   <img 
                     src={imagemPreview} 
                     alt="Preview" 
@@ -614,11 +576,11 @@ function Gerenciamento() {
               <div className="flex items-center justify-center w-full">
                 <label 
                   htmlFor="imagem-gerenciamento" 
-                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors ${imagemPreview ? 'hidden' : ''}`}
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-700 border-dashed rounded-xl cursor-pointer bg-gray-800/30 hover:bg-gray-800/50 transition-colors ${imagemPreview ? 'hidden' : ''}`}
                 >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Building2 className="w-10 h-10 mb-3 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-500">
+                    <Building2 className="w-10 h-10 mb-3 text-gray-500" />
+                    <p className="mb-2 text-sm text-gray-400">
                       <span className="font-semibold">Clique para fazer upload</span> ou arraste e solte
                     </p>
                     <p className="text-xs text-gray-500">PNG, JPG ou WEBP (máx. 5MB)</p>
@@ -639,41 +601,41 @@ function Gerenciamento() {
             </div>
 
             {/* Configurações de Fila */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-orange-400" />
                 Configurações de Fila
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Máx. Reentradas por Dia</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Máx. Reentradas por Dia</label>
                   <input
                     type="number"
                     value={configuracoes.maxReentradasPorDia}
                     onChange={(e) => setConfiguracoes({...configuracoes, maxReentradasPorDia: parseInt(e.target.value)})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white"
                     placeholder="2"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">Preço Fast Lane (R$)</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Preço Fast Lane (R$)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={configuracoes.precoFastlane}
                     onChange={(e) => setConfiguracoes({...configuracoes, precoFastlane: parseFloat(e.target.value)})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white"
                     placeholder="15.00"
                   />
                 </div>
               </div>
               <div className="mt-5">
-                <label className="block text-sm font-medium text-gray-900 mb-2">Mensagem de Boas-Vindas</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Mensagem de Boas-Vindas</label>
                 <textarea
                   value={configuracoes.mensagemBoasVindas}
                   onChange={(e) => setConfiguracoes({...configuracoes, mensagemBoasVindas: e.target.value})}
                   rows="3"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white placeholder:text-gray-500 resize-none"
                   placeholder="Digite a mensagem que será exibida aos clientes ao entrar na fila"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -683,23 +645,23 @@ function Gerenciamento() {
             </div>
 
             {/* Horários de Funcionamento */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Clock className="w-5 h-5" />
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50 rounded-2xl p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-orange-400" />
                 Horários de Funcionamento
               </h2>
               <div className="space-y-4">
                 {diasSemana.map((dia) => (
-                  <div key={dia.key} className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0">
+                  <div key={dia.key} className="flex items-center gap-4 pb-4 border-b border-gray-800/50 last:border-0">
                     <div className="w-32">
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={configuracoes.horarios[dia.key].aberto}
                           onChange={(e) => handleHorarioChange(dia.key, 'aberto', e.target.checked)}
-                          className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          className="w-4 h-4 text-orange-500 border-gray-600 rounded focus:ring-orange-500 bg-gray-800"
                         />
-                        <span className="text-sm font-medium text-gray-900">{dia.label}</span>
+                        <span className="text-sm font-medium text-white">{dia.label}</span>
                       </label>
                     </div>
                     {configuracoes.horarios[dia.key].aberto && (
@@ -708,14 +670,14 @@ function Gerenciamento() {
                           type="time"
                           value={configuracoes.horarios[dia.key].inicio}
                           onChange={(e) => handleHorarioChange(dia.key, 'inicio', e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                          className="px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white text-sm"
                         />
                         <span className="text-gray-500">até</span>
                         <input
                           type="time"
                           value={configuracoes.horarios[dia.key].fim}
                           onChange={(e) => handleHorarioChange(dia.key, 'fim', e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-sm"
+                          className="px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white text-sm"
                         />
                       </div>
                     )}
@@ -731,7 +693,7 @@ function Gerenciamento() {
             <div className="flex justify-end">
               <button
                 onClick={handleSalvarConfiguracoes}
-                className="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-semibold shadow-md hover:shadow-lg"
+                className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-semibold shadow-lg shadow-orange-500/25"
               >
                 Salvar Configurações
               </button>
@@ -742,47 +704,47 @@ function Gerenciamento() {
 
       {/* Modal Adicionar Operador */}
       {mostrarModalOperador && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-8 relative">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl shadow-xl max-w-lg w-full p-8 relative border border-gray-800/50">
             <button
               onClick={() => setMostrarModalOperador(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-300"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Adicionar Novo Membro da Equipe</h3>
+            <h3 className="text-2xl font-bold text-white mb-6">Adicionar Novo Membro da Equipe</h3>
             <form onSubmit={handleAdicionarMembro} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Nome Completo</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Nome Completo</label>
                 <input
                   type="text"
                   value={novoMembro.nome}
                   onChange={(e) => setNovoMembro({...novoMembro, nome: e.target.value})}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white placeholder:text-gray-500"
                   placeholder="Ex: João Silva"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
                 <input
                   type="email"
                   value={novoMembro.email}
                   onChange={(e) => setNovoMembro({...novoMembro, email: e.target.value})}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-600"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white placeholder:text-gray-500"
                   placeholder="joao.silva@restaurant.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Role</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Role</label>
                 <select 
                   value={novoMembro.role}
                   onChange={(e) => setNovoMembro({...novoMembro, role: e.target.value})}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-600 bg-white"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white"
                 >
                   <option value="OPERADOR">OPERADOR</option>
                   <option value="ADMIN">ADMIN</option>
@@ -792,14 +754,14 @@ function Gerenciamento() {
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Senha Inicial</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Senha Inicial</label>
                 <input
                   type="password"
                   value={novoMembro.senha}
                   onChange={(e) => setNovoMembro({...novoMembro, senha: e.target.value})}
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-gray-900"
+                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-white placeholder:text-gray-500"
                   placeholder="••••••••"
                 />
               </div>
@@ -807,13 +769,13 @@ function Gerenciamento() {
                 <button
                   type="button"
                   onClick={() => setMostrarModalOperador(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800 transition-colors font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all font-medium shadow-lg shadow-orange-500/25"
                 >
                   Salvar Membro
                 </button>
@@ -825,27 +787,27 @@ function Gerenciamento() {
 
       {/* Modal Confirmar Exclusão */}
       {mostrarModalExcluir && membroParaExcluir && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-8 relative">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-2xl shadow-xl max-w-md w-full p-8 relative border border-gray-800/50">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <Trash2 className="h-6 w-6 text-red-600" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/20 mb-4">
+                <Trash2 className="h-6 w-6 text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Remover Membro da Equipe</h3>
-              <p className="text-gray-600 mb-6">
-                Tem certeza que deseja remover <span className="font-semibold text-gray-900">{membroParaExcluir.nome}</span> da equipe?
+              <h3 className="text-xl font-bold text-white mb-2">Remover Membro da Equipe</h3>
+              <p className="text-gray-400 mb-6">
+                Tem certeza que deseja remover <span className="font-semibold text-white">{membroParaExcluir.nome}</span> da equipe?
                 Esta ação não pode ser desfeita.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={cancelarExclusao}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 border border-gray-700 text-gray-300 rounded-xl hover:bg-gray-800 transition-colors font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={confirmarExclusao}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-all font-medium shadow-lg shadow-red-500/25"
                 >
                   Remover
                 </button>

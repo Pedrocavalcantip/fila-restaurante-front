@@ -18,6 +18,7 @@ import DetalhesTicket from './paginas/DetalhesTicket';
 import PainelPublico from './paginas/PainelPublico';
 import ConfiguracoesRestaurante from './paginas/ConfiguracoesRestaurante';
 import HistoricoClienteTickets from './paginas/HistoricoClienteTickets';
+import Dashboard from './paginas/Dashboard';
 
 function App() {
   return (
@@ -59,6 +60,8 @@ function App() {
         <Route path="/restaurante/configuracoes" element={<ConfiguracoesRestaurante />} />
         {/* Histórico de Tickets do Cliente */}
         <Route path="/cliente/historico" element={<HistoricoClienteTickets />} />
+        {/* Dashboard de Estatísticas */}
+        <Route path="/restaurante/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
   );

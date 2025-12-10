@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Users, Mail, Lock, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { clienteService } from '../services/api';
 
 export default function LoginCliente() {
-  const [email, setEmail] = useState('1234@gmail.com');
-  const [senha, setSenha] = useState('1234');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
@@ -16,7 +16,6 @@ export default function LoginCliente() {
     setLoading(true);
 
     try {
-      // Integração com backend
       const response = await clienteService.login({ email, senha });
       const { token, cliente } = response;
       localStorage.setItem('token', token);
@@ -32,99 +31,124 @@ export default function LoginCliente() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-pink-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 -left-40 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Botão Voltar */}
         <Link 
           to="/" 
-          className="inline-flex items-center gap-1.5 text-gray-700 hover:text-gray-900 mb-6 transition-colors text-sm"
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors group"
         >
-          <ArrowLeft size={16} />
-          <span>Voltar</span>
+          <div className="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center transition-colors">
+            <ArrowLeft size={16} />
+          </div>
+          <span className="text-sm font-medium">Voltar ao início</span>
         </Link>
 
         {/* Card de Login */}
-        <div className="bg-white rounded-xl shadow-md p-8">
-          {/* Ícone de Usuários */}
-          <div className="flex justify-center mb-5">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-              <Users size={32} className="text-orange-600" strokeWidth={2} />
-            </div>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-white mb-2">
+              Bem-vindo de volta
+            </h1>
+            <p className="text-slate-400 text-sm">
+              Entre para acompanhar suas filas
+            </p>
           </div>
-
-          {/* Título */}
-          <h1 className="text-2xl font-bold text-center text-gray-900 mb-1">
-            Entrar
-          </h1>
-          <p className="text-center text-gray-500 text-sm mb-6">
-            Entre para acompanhar suas filas
-          </p>
 
           {/* Mensagem de Erro */}
           {erro && (
-            <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600 text-center">{erro}</p>
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-400">{erro}</p>
             </div>
           )}
 
           {/* Formulário */}
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             {/* Campo Email */}
             <div>
-              <label 
-                htmlFor="email" 
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                 Email
               </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-              />
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="Digite seu email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 outline-none transition-all text-white placeholder:text-slate-500"
+                />
+              </div>
             </div>
 
             {/* Campo Senha */}
             <div>
-              <label 
-                htmlFor="senha" 
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="senha" className="block text-sm font-medium text-slate-300 mb-2">
                 Senha
               </label>
-              <input
-                id="senha"
-                type="password"
-                placeholder="••••••••"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all text-sm text-gray-900 placeholder:text-gray-400"
-              />
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  id="senha"
+                  type="password"
+                  placeholder="••••••••"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 outline-none transition-all text-white placeholder:text-slate-500"
+                />
+              </div>
             </div>
 
             {/* Botão Entrar */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6 text-sm"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                <>
+
+                  Entrar
+                </>
+              )}
             </button>
           </form>
 
+          {/* Divider */}
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-slate-800/50 text-slate-500">ou</span>
+            </div>
+          </div>
+
           {/* Link Cadastre-se */}
-          <p className="mt-5 text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-slate-400">
             Não tem conta?{' '}
             <Link 
               to="/cliente/cadastro" 
-              className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+              className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
             >
-              Cadastre-se
+              Cadastre-se gratuitamente
             </Link>
           </p>
         </div>

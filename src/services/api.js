@@ -3,10 +3,15 @@ import axios from 'axios';
 // ==========================================
 // 📡 CONFIGURAÇÃO DA API
 // ==========================================
-// Em desenvolvimento, usa o proxy do Vite (/api -> http://localhost:3000/api)
-// Em produção, ajustar para a URL do backend em produção
+// VITE_API_URL: URL completa da API em produção (ex: https://seu-backend.up.railway.app/api/v1)
+// Em desenvolvimento: deixe vazio para usar o proxy do Vite (/api -> localhost:3000)
+
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+
+console.log('🌐 API URL configurada:', API_URL);
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_URL,
 });
 
 // Adiciona o Token automaticamente em rotas privadas
@@ -401,6 +406,18 @@ export const ticketService = {
    */
   cancelarTicket: async (ticketId, motivo) => {
     const response = await api.post(`/tickets/${ticketId}/cancelar`, { motivo });
+    return response.data;
+  },
+
+  // --- ESTATÍSTICAS (Admin/Operador) ---
+
+  /**
+   * Buscar estatísticas do restaurante
+   * GET /api/v1/tickets/estatisticas
+   * @returns {Object} Estatísticas com dados de hoje, últimos 7 e 30 dias, clientes e gráficos
+   */
+  buscarEstatisticas: async () => {
+    const response = await api.get('/tickets/estatisticas');
     return response.data;
   },
 };

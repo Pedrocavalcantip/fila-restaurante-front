@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Clock, Phone, CheckCircle, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv } from 'lucide-react';
+import { ArrowLeft, Users, Clock, Phone, CheckCircle, CheckCircle2, XCircle, RefreshCw, SkipForward, AlertCircle, X, MessageSquare, Calendar, History, Tv, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ticketService, restauranteService } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -27,13 +27,15 @@ function PainelOperador() {
     observacoes: ''
   });
 
-  // Obter slug do restaurante do localStorage
+  // Obter restauranteId do localStorage (UUID)
+  const restauranteId = localStorage.getItem('restauranteId') || '';
   const restauranteSlug = localStorage.getItem('restauranteSlug') || '';
 
   // Conectar WebSocket para atualizações em tempo real
   const { isConnected, error: wsError, on, off } = useWebSocket({ 
-    restauranteSlug,
-    autoConnect: !!restauranteSlug 
+    restauranteId,
+    restauranteSlug, // fallback caso restauranteId não esteja disponível
+    autoConnect: !!(restauranteId || restauranteSlug)
   });
 
   // Carregar fila inicial
@@ -177,13 +179,36 @@ function PainelOperador() {
       const response = await ticketService.listarFilaAtiva(filaId);
       console.log('📋 Tickets recebidos:', response.tickets);
       console.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
-      console.log('👥 Quantidade pessoas:', response.tickets?.[0]?.quantidadePessoas);
+      console.log('👥 Campos de quantidade:', {
+        quantidadePessoas: response.tickets?.[0]?.quantidadePessoas,
+        qtdPessoas: response.tickets?.[0]?.qtdPessoas,
+        numeroPessoas: response.tickets?.[0]?.numeroPessoas,
+        pessoas: response.tickets?.[0]?.pessoas
+      });
       setFilaData(response.fila);
-      setTickets(response.tickets || []);
+      
+      // Calcular posições localmente baseado na ordem dos tickets AGUARDANDO
+      const ticketsComPosicao = (response.tickets || []).map((ticket, index) => {
+        // Se o ticket está AGUARDANDO, calcular posição baseada na ordem
+        // Tickets CHAMADO/MESA_PRONTA não contam na fila de espera
+        return ticket;
+      });
+      
+      // Recalcular posições apenas para tickets AGUARDANDO
+      let posicaoAtual = 1;
+      const ticketsOrdenados = ticketsComPosicao.map(ticket => {
+        if (ticket.status === 'AGUARDANDO') {
+          return { ...ticket, posicao: posicaoAtual++ };
+        }
+        // Tickets CHAMADO ou MESA_PRONTA ficam sem posição numérica
+        return { ...ticket, posicao: ticket.status === 'CHAMADO' ? '📢' : ticket.status === 'MESA_PRONTA' ? '✅' : ticket.posicao };
+      });
+      
+      setTickets(ticketsOrdenados);
       setEstatisticas(response.estatisticas);
       console.log('✅ Fila carregada:', response);
       console.log('📊 Total de tickets:', response.tickets?.length);
-      console.log('📋 Status dos tickets:', response.tickets?.map(t => ({ numero: t.numero, status: t.status })));
+      console.log('📋 Status dos tickets:', response.tickets?.map(t => ({ numeroTicket: t.numeroTicket, status: t.status })));
       console.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
@@ -406,23 +431,44 @@ function PainelOperador() {
     }
   };
 
+  const handleLogout = () => {
+    // Limpar TODOS os dados do localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('operadorLogado');
+    localStorage.removeItem('restauranteSlug');
+    localStorage.removeItem('filaAtivaId');
+    localStorage.removeItem('userRole');
+    
+    console.log('✅ Logout realizado - localStorage limpo');
+    
+    // Redirecionar para login
+    navigate('/restaurante/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Simplificado */}
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950">
+      {/* Ambient Lights */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-amber-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-purple-600/10 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header */}
+      <div className="bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleVoltar}
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Fila ao Vivo</h1>
+                <h1 className="text-xl font-bold text-white">Fila ao Vivo</h1>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-sm text-gray-500">Gerencie os clientes em tempo real</p>
+                  <p className="text-sm text-gray-400">Gerencie os clientes em tempo real</p>
                   <WebSocketStatus isConnected={isConnected} error={wsError} />
                 </div>
               </div>
@@ -430,7 +476,7 @@ function PainelOperador() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigate('/publico/painel')}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white border border-gray-700/50 rounded-xl transition-all duration-200 text-sm font-medium"
                 title="Painel Público (TV)"
               >
                 <Tv className="w-4 h-4" />
@@ -438,14 +484,22 @@ function PainelOperador() {
               </button>
               <button
                 onClick={() => navigate('/restaurante/historico-tickets')}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-800 text-white rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 hover:text-white border border-gray-700/50 rounded-xl transition-all duration-200 text-sm font-medium"
               >
                 <History className="w-4 h-4" />
                 Histórico
               </button>
               <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-xl transition-all duration-200 text-sm font-medium"
+                title="Sair da conta"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </button>
+              <button
                 onClick={() => setModalAdicionarAberto(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all duration-200 text-sm font-semibold shadow-lg shadow-orange-500/25"
               >
                 <Users className="w-4 h-4" />
                 Cliente Local +
@@ -453,7 +507,7 @@ function PainelOperador() {
               <button
                 onClick={atualizarFila}
                 disabled={atualizando}
-                className="flex items-center gap-2 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all duration-200 disabled:opacity-50 text-sm font-semibold shadow-lg shadow-orange-500/25"
               >
                 <RefreshCw className={`w-4 h-4 ${atualizando ? 'animate-spin' : ''}`} />
                 Atualizar
@@ -461,69 +515,33 @@ function PainelOperador() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Aguardando</p>
-                <p className="text-2xl font-bold text-gray-900">{estatisticas?.totalAguardando || 0}</p>
-              </div>
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-orange-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Chamados</p>
-                <p className="text-2xl font-bold text-gray-900">{estatisticas?.totalChamados || 0}</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-5 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Total na Fila</p>
-                <p className="text-2xl font-bold text-gray-900">{tickets.length}</p>
-              </div>
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-        </div>
+      
 
         {/* Lista da Fila */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-base font-bold text-gray-900">Clientes Aguardando</h2>
+        <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800/50">
+          <div className="px-6 py-4 border-b border-gray-800/50">
+            <h2 className="text-base font-bold text-white">Clientes Aguardando</h2>
           </div>
 
           {loading ? (
             <div className="p-12 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <p className="mt-3 text-sm text-gray-600">Carregando fila...</p>
+              <div className="w-12 h-12 relative mx-auto mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-700"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+              </div>
+              <p className="text-sm text-gray-400">Carregando fila...</p>
             </div>
           ) : tickets.length === 0 ? (
             <div className="p-12 text-center">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <div className="w-16 h-16 bg-gray-800/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-gray-600" />
+              </div>
               <p className="text-sm text-gray-500">Nenhum cliente na fila no momento</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-800/50">
               {tickets.map((ticket) => (
-                <div key={ticket.id} className="p-5 hover:bg-gray-50 transition-colors">
+                <div key={ticket.id} className="p-5 hover:bg-gray-800/30 transition-all duration-200">
                   <div className="flex items-center justify-between gap-6">
                     <div 
                       className="flex items-center gap-4 flex-1 cursor-pointer"
@@ -531,72 +549,96 @@ function PainelOperador() {
                     >
                       {/* Posição - Design mais compacto */}
                       <div className="flex-shrink-0">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                          <span className="text-3xl font-bold text-white">{ticket.posicao}º</span>
+                        <div className={`w-16 h-16 rounded-xl flex items-center justify-center shadow-lg ${
+                          ticket.status === 'CHAMADO' 
+                            ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-purple-500/25' 
+                            : ticket.status === 'MESA_PRONTA'
+                            ? 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-orange-500/25'
+                            : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-gray-500/25'
+                        }`}>
+                          <span className="text-3xl font-bold text-white">
+                            {ticket.status === 'CHAMADO' ? '📢' : 
+                             ticket.status === 'MESA_PRONTA' ? '✅' :
+                             `${ticket.posicao}º`}
+                          </span>
                         </div>
                       </div>
 
                       {/* Informações do Cliente */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-base font-bold text-gray-900 truncate hover:text-orange-600 transition-colors">
+                          <h3 className="text-base font-bold text-white truncate hover:text-orange-400 transition-colors">
                             {ticket.nomeCliente}
                           </h3>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
-                            ticket.prioridade === 'FAST_LANE' 
-                              ? 'bg-yellow-100 text-yellow-700' 
-                              : ticket.prioridade === 'VIP'
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'bg-blue-100 text-blue-700'
+                          {/* Badge de Prioridade */}
+                          {ticket.prioridade === 'FAST_LANE' && (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                              ⚡ Fast Lane
+                            </span>
+                          )}
+                          {ticket.prioridade === 'VIP' && (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                              👑 VIP
+                            </span>
+                          )}
+                          {/* Badge de Status */}
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                            ticket.status === 'CHAMADO' 
+                              ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                              : ticket.status === 'MESA_PRONTA'
+                              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                              : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                           }`}>
-                            {ticket.prioridade === 'FAST_LANE' ? '⚡ AGUARDANDO' : ticket.prioridade}
+                            {ticket.status === 'CHAMADO' ? '📢 Chamado' : 
+                             ticket.status === 'MESA_PRONTA' ? '✅ Confirmado' :
+                             '⏳ Aguardando'}
                           </span>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-xs text-gray-600">
-                          <span className="flex items-center gap-1">
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <span className="flex items-center gap-1.5">
                             <Phone className="w-3.5 h-3.5" />
                             {formatarTelefone(ticket.telefoneCliente) || 'Sem telefone'}
                           </span>
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1.5">
                             <Users className="w-3.5 h-3.5" />
                             {ticket.quantidadePessoas || 1} pessoa{(ticket.quantidadePessoas || 1) > 1 ? 's' : ''}
                           </span>
-                          <span className={`flex items-center gap-1 font-medium ${
-                            ticket.status === 'CHAMADO' ? 'text-green-600' : 'text-orange-600'
+                          <span className={`flex items-center gap-1.5 font-medium ${
+                            ticket.status === 'CHAMADO' ? 'text-purple-400' : 'text-orange-400'
                           }`}>
                             <Clock className="w-3.5 h-3.5" />
                             {ticket.status === 'CHAMADO' ? 'Aguardando' : 'Aguardando'} {formatarTempoEspera(ticket.criadoEm)}
                           </span>
                           {ticket.contagemRechamada > 0 && (
-                            <span className="flex items-center gap-1 text-yellow-700 font-medium">
+                            <span className="flex items-center gap-1.5 text-red-400 font-bold bg-red-500/20 px-2 py-0.5 rounded-lg animate-pulse border border-red-500/30">
                               <AlertCircle className="w-3.5 h-3.5" />
-                              {ticket.contagemRechamada}x
+                              Rechamado {ticket.contagemRechamada}x
                             </span>
                           )}
                         </div>
 
                         {ticket.observacoes && (
-                          <div className="mt-2 text-xs text-gray-600 italic">
+                          <div className="mt-2 text-xs text-gray-500 italic">
                             💬 {ticket.observacoes}
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Ações - Botões com cores mais suaves */}
+                    {/* Ações - Botões */}
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {ticket.status === 'AGUARDANDO' && (
                         <>
                           <button
                             onClick={() => chamarCliente(ticket.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm"
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl transition-all text-sm font-semibold whitespace-nowrap shadow-lg shadow-orange-500/25"
                           >
                             🔔 Chamar Cliente
                           </button>
                           <button
                             onClick={() => abrirModalCancelar(ticket.id)}
-                            className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-all text-sm font-medium shadow-sm"
+                            className="px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 border border-gray-700/50 rounded-xl transition-all text-sm font-medium"
                           >
                             Cancelar
                           </button>
@@ -607,25 +649,25 @@ function PainelOperador() {
                         <>
                           <button
                             onClick={() => confirmarPresenca(ticket.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm"
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all text-sm font-semibold whitespace-nowrap shadow-lg shadow-orange-500/25"
                           >
                             ✓ Confirmar
                           </button>
                           <button
                             onClick={() => rechamarCliente(ticket.id)}
-                            className="px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all text-sm font-medium shadow-sm"
+                            className="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all text-sm font-semibold shadow-lg shadow-purple-500/25"
                           >
                             Rechamar
                           </button>
                           <button
                             onClick={() => pularVez(ticket.id)}
-                            className="px-3 py-2 bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-lg transition-all text-sm font-medium shadow-sm"
+                            className="px-3 py-2 bg-gray-700/50 hover:bg-white hover:text-gray-900 text-gray-300 border border-gray-600/50 rounded-xl transition-all text-sm font-medium"
                           >
                             Pular
                           </button>
                           <button
                             onClick={() => marcarNoShow(ticket.id)}
-                            className="px-3 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-all text-sm font-medium shadow-sm"
+                            className="px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 border border-gray-700/50 rounded-xl transition-all text-sm font-medium"
                           >
                             No-Show
                           </button>
@@ -636,13 +678,13 @@ function PainelOperador() {
                         <>
                           <button
                             onClick={() => finalizarAtendimento(ticket.id)}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all text-sm font-medium whitespace-nowrap shadow-sm"
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all text-sm font-semibold whitespace-nowrap shadow-lg shadow-orange-500/25"
                           >
                             Finalizar
                           </button>
                           <button
                             onClick={() => abrirModalCancelar(ticket.id)}
-                            className="px-3 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-all text-sm font-medium shadow-sm"
+                            className="px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-gray-300 border border-gray-700/50 rounded-xl transition-all text-sm font-medium"
                           >
                             Cancelar
                           </button>
@@ -659,21 +701,21 @@ function PainelOperador() {
 
       {/* Modal de Detalhes do Ticket */}
       {modalAberto && ticketSelecionado && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={fecharModal}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={fecharModal}>
+          <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
             {/* Header do Modal */}
-            <div className="sticky top-0 bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-t-2xl">
+            <div className="sticky top-0 bg-gradient-to-br from-orange-500 to-amber-600 p-6 rounded-t-2xl">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">{ticketSelecionado.nomeCliente}</h2>
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-medium">
-                      Ticket {ticketSelecionado.numero}
+                    <span className="px-3 py-1 bg-white/20 text-white rounded-full text-sm font-medium">
+                      Ticket {ticketSelecionado.numeroTicket}
                     </span>
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                       ticketSelecionado.status === 'CHAMADO'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-500/20 text-green-300'
+                        : 'bg-gray-500/20 text-gray-300'
                     }`}>
                       {ticketSelecionado.status}
                     </span>
@@ -681,7 +723,7 @@ function PainelOperador() {
                 </div>
                 <button
                   onClick={fecharModal}
-                  className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <X className="w-6 h-6 text-white" />
                 </button>
@@ -692,52 +734,52 @@ function PainelOperador() {
             <div className="p-6 space-y-6">
               {/* Informações Principais */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-orange-50 rounded-xl p-4">
-                  <p className="text-xs text-orange-600 font-medium mb-1">Posição na Fila</p>
-                  <p className="text-3xl font-bold text-orange-600">{ticketSelecionado.posicao}º</p>
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4">
+                  <p className="text-xs text-orange-400 font-medium mb-1">Posição na Fila</p>
+                  <p className="text-3xl font-bold text-orange-400">{ticketSelecionado.posicao}º</p>
                 </div>
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-xs text-blue-600 font-medium mb-1">Tempo de Espera</p>
-                  <p className="text-3xl font-bold text-blue-600">{formatarTempoEspera(ticketSelecionado.criadoEm)}</p>
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                  <p className="text-xs text-purple-400 font-medium mb-1">Tempo de Espera</p>
+                  <p className="text-3xl font-bold text-purple-400">{formatarTempoEspera(ticketSelecionado.criadoEm)}</p>
                 </div>
               </div>
 
               {/* Detalhes do Cliente */}
-              <div className="bg-gray-50 rounded-xl p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
+              <div className="bg-gray-800/50 rounded-xl p-5">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-orange-400" />
                   Informações do Cliente
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Telefone</p>
-                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                    <p className="text-xs text-gray-400 font-medium mb-1">Telefone</p>
+                    <p className="text-sm text-white font-semibold flex items-center gap-2">
                       <Phone className="w-4 h-4 text-gray-500" />
                       {formatarTelefone(ticketSelecionado.telefoneCliente)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Quantidade de Pessoas</p>
-                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                    <p className="text-xs text-gray-400 font-medium mb-1">Quantidade de Pessoas</p>
+                    <p className="text-sm text-white font-semibold flex items-center gap-2">
                       <Users className="w-4 h-4 text-gray-500" />
                       {ticketSelecionado.quantidadePessoas} pessoa{ticketSelecionado.quantidadePessoas > 1 ? 's' : ''}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Prioridade</p>
+                    <p className="text-xs text-gray-400 font-medium mb-1">Prioridade</p>
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                       ticketSelecionado.prioridade === 'FAST_LANE' 
-                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' 
+                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
                         : ticketSelecionado.prioridade === 'VIP'
-                        ? 'bg-purple-100 text-purple-800 border border-purple-300'
-                        : 'bg-blue-100 text-blue-800 border border-blue-300'
+                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
                       {ticketSelecionado.prioridade === 'FAST_LANE' ? 'Fast Lane' : ticketSelecionado.prioridade === 'VIP' ? 'VIP' : 'Normal'}
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium mb-1">Tempo Estimado</p>
-                    <p className="text-sm text-gray-900 font-semibold flex items-center gap-2">
+                    <p className="text-xs text-gray-400 font-medium mb-1">Tempo Estimado</p>
+                    <p className="text-sm text-white font-semibold flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-500" />
                       {ticketSelecionado.tempoEstimado || 0} minutos
                     </p>
@@ -747,48 +789,48 @@ function PainelOperador() {
 
               {/* Observações */}
               {ticketSelecionado.observacoes && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                  <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
+                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5">
+                  <h3 className="text-lg font-bold text-purple-400 mb-3 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5" />
                     Observações
                   </h3>
-                  <p className="text-sm text-blue-800">{ticketSelecionado.observacoes}</p>
+                  <p className="text-sm text-purple-300">{ticketSelecionado.observacoes}</p>
                 </div>
               )}
 
               {/* Informações de Chamadas */}
               {ticketSelecionado.contagemRechamada > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
-                  <h3 className="text-lg font-bold text-yellow-900 mb-3 flex items-center gap-2">
+                <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-5">
+                  <h3 className="text-lg font-bold text-orange-400 mb-3 flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
                     Status de Chamadas
                   </h3>
-                  <p className="text-sm text-yellow-800">
+                  <p className="text-sm text-orange-300">
                     Cliente foi chamado <strong>{ticketSelecionado.contagemRechamada}x</strong>
                   </p>
                 </div>
               )}
 
               {/* Histórico de Timestamps */}
-              <div className="bg-gray-50 rounded-xl p-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
+              <div className="bg-gray-800/50 rounded-xl p-5">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-orange-400" />
                   Histórico
                 </h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Ticket Criado</p>
-                      <p className="text-xs text-gray-600">{formatarDataHora(ticketSelecionado.criadoEm)}</p>
+                      <p className="text-sm font-medium text-white">Ticket Criado</p>
+                      <p className="text-xs text-gray-400">{formatarDataHora(ticketSelecionado.criadoEm)}</p>
                     </div>
                   </div>
                   {ticketSelecionado.status === 'CHAMADO' && (
                     <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Cliente Chamado</p>
-                        <p className="text-xs text-gray-600">Aguardando confirmação</p>
+                        <p className="text-sm font-medium text-white">Cliente Chamado</p>
+                        <p className="text-xs text-gray-400">Aguardando confirmação</p>
                       </div>
                     </div>
                   )}
@@ -797,19 +839,19 @@ function PainelOperador() {
             </div>
 
             {/* Footer com Ações */}
-            <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">
+            <div className="sticky bottom-0 bg-gray-800/80 backdrop-blur-sm p-6 rounded-b-2xl border-t border-gray-700/50">
               <div className="flex gap-3">
                 {ticketSelecionado.status === 'AGUARDANDO' && (
                   <>
                     <button
                       onClick={() => { chamarCliente(ticketSelecionado.id); fecharModal(); }}
-                      className="flex-1 px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all font-semibold"
                     >
                       🔔 Chamar Cliente
                     </button>
                     <button
                       onClick={() => { abrirModalCancelar(ticketSelecionado.id); }}
-                      className="px-4 py-3 bg-white hover:bg-red-50 text-red-600 border-2 border-red-600 rounded-lg transition-all font-semibold"
+                      className="px-4 py-3 bg-transparent hover:bg-red-500/10 text-red-400 border border-red-500/50 hover:border-red-500 rounded-xl transition-all font-semibold"
                     >
                       Cancelar
                     </button>
@@ -819,13 +861,13 @@ function PainelOperador() {
                   <>
                     <button
                       onClick={() => { finalizarAtendimento(ticketSelecionado.id); fecharModal(); }}
-                      className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all font-semibold"
                     >
                       Finalizar
                     </button>
                     <button
                       onClick={() => { rechamarCliente(ticketSelecionado.id); fecharModal(); }}
-                      className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:shadow-lg font-semibold"
+                      className="px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-all font-semibold"
                     >
                       🔁 Rechamar
                     </button>
@@ -839,26 +881,26 @@ function PainelOperador() {
 
       {/* Modal de Confirmação de Cancelamento */}
       {modalCancelarAberto && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setModalCancelarAberto(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setModalCancelarAberto(false)}>
+          <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <XCircle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                <XCircle className="w-6 h-6 text-red-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Cancelar Ticket</h2>
-                <p className="text-sm text-gray-600">Esta ação não pode ser desfeita</p>
+                <h2 className="text-xl font-bold text-white">Cancelar Ticket</h2>
+                <p className="text-sm text-gray-400">Esta ação não pode ser desfeita</p>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Motivo do cancelamento *
               </label>
               <textarea
                 value={motivoCancelamento}
                 onChange={(e) => setMotivoCancelamento(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 rows="3"
                 placeholder="Ex: Cliente desistiu, problema no sistema..."
               />
@@ -867,13 +909,13 @@ function PainelOperador() {
             <div className="flex gap-3">
               <button
                 onClick={() => { setModalCancelarAberto(false); setMotivoCancelamento(''); setTicketParaCancelar(null); }}
-                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors font-medium border border-gray-700"
               >
                 Voltar
               </button>
               <button
                 onClick={cancelarTicket}
-                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white rounded-xl transition-colors font-semibold shadow-lg shadow-red-500/25"
               >
                 Confirmar Cancelamento
               </button>
@@ -884,47 +926,47 @@ function PainelOperador() {
 
       {/* Modal de Adicionar Cliente Presencial */}
       {modalAdicionarAberto && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setModalAdicionarAberto(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setModalAdicionarAberto(false)}>
+          <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-800/50" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <Users className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
+                <Users className="w-6 h-6 text-orange-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Adicionar Cliente</h2>
-                <p className="text-sm text-gray-600">Adicionar cliente presencial na fila</p>
+                <h2 className="text-xl font-bold text-white">Adicionar Cliente</h2>
+                <p className="text-sm text-gray-400">Adicionar cliente presencial na fila</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nome do Cliente *
                 </label>
                 <input
                   type="text"
                   value={novoCliente.nomeCliente}
                   onChange={(e) => setNovoCliente({ ...novoCliente, nomeCliente: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Ex: João Silva"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Telefone *
                 </label>
                 <input
                   type="tel"
                   value={novoCliente.telefone}
                   onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="(11) 98765-4321"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Quantidade de Pessoas
                 </label>
                 <input
@@ -932,18 +974,18 @@ function PainelOperador() {
                   min="1"
                   value={novoCliente.quantidadePessoas}
                   onChange={(e) => setNovoCliente({ ...novoCliente, quantidadePessoas: parseInt(e.target.value) || 1 })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Observações
                 </label>
                 <textarea
                   value={novoCliente.observacoes}
                   onChange={(e) => setNovoCliente({ ...novoCliente, observacoes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   rows="2"
                   placeholder="Ex: Cadeira de bebê, mesa próxima à janela..."
                 />
@@ -953,13 +995,13 @@ function PainelOperador() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => { setModalAdicionarAberto(false); setNovoCliente({ nomeCliente: '', telefone: '', quantidadePessoas: 1, observacoes: '' }); }}
-                className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors font-medium border border-gray-700"
               >
                 Cancelar
               </button>
               <button
                 onClick={adicionarClientePresencial}
-                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold"
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:bg-white hover:from-white hover:to-white hover:text-gray-900 text-white rounded-xl transition-colors font-semibold shadow-lg shadow-orange-500/25"
               >
                 Adicionar à Fila
               </button>
