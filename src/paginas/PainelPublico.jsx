@@ -37,11 +37,11 @@ export default function PainelPublico() {
   useEffect(() => {
     if (!isConnected) return;
 
-    console.log('🎧 Painel Público: Escutando tickets chamados...');
+    logger.log('🎧 Painel Público: Escutando tickets chamados...');
 
     // Ticket chamado - adicionar ao topo da lista
     const handleTicketChamado = (data) => {
-      console.log('📢 TICKET CHAMADO:', data);
+      logger.log('📢 TICKET CHAMADO:', data);
       
       // Tocar som de notificação
       playNotificationSound();
@@ -79,9 +79,9 @@ export default function PainelPublico() {
   const playNotificationSound = () => {
     try {
       const audio = new Audio('/notification.mp3');
-      audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+      audio.play().catch(err => logger.log('Não foi possível tocar som:', err));
     } catch (err) {
-      console.log('Erro ao tocar som:', err);
+      logger.log('Erro ao tocar som:', err);
     }
   };
 
@@ -90,7 +90,7 @@ export default function PainelPublico() {
       const filaId = localStorage.getItem('filaAtivaId');
       
       if (!filaId) {
-        console.warn('⚠️ FilaId não encontrado no localStorage');
+        logger.warn('⚠️ FilaId não encontrado no localStorage');
         return;
       }
 
@@ -106,10 +106,10 @@ export default function PainelPublico() {
         .sort((a, b) => new Date(b.chamadoEm || b.atualizadoEm) - new Date(a.chamadoEm || a.atualizadoEm))
         .slice(0, 10); // Últimos 10 tickets chamados
       
-      console.log('📺 Painel TV - Tickets chamados:', ticketsFiltrados.length);
+      logger.log('📺 Painel TV - Tickets chamados:', ticketsFiltrados.length);
       setTicketsChamados(ticketsFiltrados);
     } catch (error) {
-      console.error('❌ Erro ao carregar tickets:', error);
+      logger.error('❌ Erro ao carregar tickets:', error);
     }
   };
 

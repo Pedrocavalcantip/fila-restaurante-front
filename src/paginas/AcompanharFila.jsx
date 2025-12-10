@@ -42,20 +42,20 @@ export default function AcompanharFila() {
   useEffect(() => {
     if (!isConnected || !ticket?.id) return;
 
-    console.log('🎧 Escutando atualizações do ticket:', ticket.id);
+    logger.log('🎧 Escutando atualizações do ticket:', ticket.id);
 
     // Ticket atualizado
     const handleTicketAtualizado = (data) => {
       // Verificar se é o meu ticket
       if (data.id === ticket.id) {
-        console.log('📝 Meu ticket atualizado:', data);
+        logger.log('📝 Meu ticket atualizado:', data);
         carregarTicket(); // Recarregar dados atualizados
       }
     };
 
     // Ticket chamado
     const handleTicketChamado = (data) => {
-      console.log('📢 EVENTO WebSocket ticket:chamado recebido:', data);
+      logger.log('📢 EVENTO WebSocket ticket:chamado recebido:', data);
       
       if (data.id === ticket.id) {
         // Verificar se é rechamada pelo campo contagemRechamada ou se já estava CHAMADO
@@ -88,7 +88,7 @@ export default function AcompanharFila() {
         
         // Ativar alerta visual de rechamada
         if (isRechamada) {
-          console.log('🚨 Ativando alerta de rechamada!');
+          logger.log('🚨 Ativando alerta de rechamada!');
           setAlertaRechamada(true);
           if (alertaTimeoutRef.current) {
             clearTimeout(alertaTimeoutRef.current);
@@ -108,12 +108,12 @@ export default function AcompanharFila() {
 
     // Mesa pronta (quando operador confirma presença)
     const handleMesaPronta = (data) => {
-      console.log('🍽️ EVENTO WebSocket recebido: ticket:mesa-pronta', data);
-      console.log('🔍 Meu ticket ID:', ticket.id);
-      console.log('🔍 Ticket ID do evento:', data.id || data.ticketId);
+      logger.log('🍽️ EVENTO WebSocket recebido: ticket:mesa-pronta', data);
+      logger.log('🔍 Meu ticket ID:', ticket.id);
+      logger.log('🔍 Ticket ID do evento:', data.id || data.ticketId);
       
       if (data.id === ticket.id || data.ticketId === ticket.id) {
-        console.log('✅ É o meu ticket! Atualizando...');
+        logger.log('✅ É o meu ticket! Atualizando...');
         // Exibir notificação
         if (Notification.permission === 'granted') {
           new Notification('Sua mesa está pronta!', {
@@ -124,13 +124,13 @@ export default function AcompanharFila() {
         // Tocar som
         try {
           const audio = new Audio('/notification.mp3');
-          audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+          audio.play().catch(err => logger.log('Não foi possível tocar som:', err));
         } catch (err) {
-          console.log('Erro ao tocar som:', err);
+          logger.log('Erro ao tocar som:', err);
         }
         carregarTicket();
       } else {
-        console.log('⚠️ Não é o meu ticket, ignorando');
+        logger.log('⚠️ Não é o meu ticket, ignorando');
       }
     };
 
@@ -149,7 +149,7 @@ export default function AcompanharFila() {
   const carregarHistorico = async () => {
     try {
       setLoadingHistorico(true);
-      console.log('ℹ️ Carregando histórico de tickets...');
+      logger.log('ℹ️ Carregando histórico de tickets...');
       
       const response = await clienteService.buscarMeuTicket();
       
@@ -162,9 +162,9 @@ export default function AcompanharFila() {
       );
       
       setHistorico(ticketsHistorico);
-      console.log('✅ Histórico carregado:', ticketsHistorico.length, 'tickets');
+      logger.log('✅ Histórico carregado:', ticketsHistorico.length, 'tickets');
     } catch (error) {
-      console.error('❌ Erro ao carregar histórico:', error);
+      logger.error('❌ Erro ao carregar histórico:', error);
       setHistorico([]);
     } finally {
       setLoadingHistorico(false);
@@ -174,12 +174,12 @@ export default function AcompanharFila() {
   const carregarTicket = async () => {
     try {
       // Buscar ticket ativo da API
-      console.log('🔍 Buscando ticket do cliente autenticado...');
+      logger.log('🔍 Buscando ticket do cliente autenticado...');
       
       const response = await clienteService.buscarMeuTicket();
       
-      console.log('✅ Ticket carregado - Response completa:', JSON.stringify(response, null, 2));
-      console.log('📦 Estrutura do response:', {
+      logger.log('✅ Ticket carregado - Response completa:', JSON.stringify(response, null, 2));
+      logger.log('📦 Estrutura do response:', {
         isArray: Array.isArray(response),
         temTicket: !!response.ticket,
         temTickets: !!response.tickets,
@@ -197,7 +197,7 @@ export default function AcompanharFila() {
         ticketEncontrado = response.find(t => 
           ['AGUARDANDO', 'CHAMADO', 'MESA_PRONTA'].includes(t.status)
         );
-        console.log('🔍 Array recebido, ticket ativo:', ticketEncontrado);
+        logger.log('🔍 Array recebido, ticket ativo:', ticketEncontrado);
       } else if (response.tickets && Array.isArray(response.tickets)) {
         // Formato: {tickets: [{...}, {...}]}
         ticketEncontrado = response.tickets.find(t => 
@@ -212,7 +212,7 @@ export default function AcompanharFila() {
         throw new Error('Nenhum ticket ativo encontrado');
       }
       
-      console.log('🎯 Campos críticos do ticket:', {
+      logger.log('🎯 Campos críticos do ticket:', {
         posicao: ticketEncontrado.posicao,
         tempoEstimado: ticketEncontrado.tempoEstimado,
         tempoEstimadoMinutos: ticketEncontrado.tempoEstimadoMinutos,
@@ -233,15 +233,15 @@ export default function AcompanharFila() {
             };
           }
         } catch (error) {
-          console.error('Erro ao buscar detalhes do restaurante:', error);
+          logger.error('Erro ao buscar detalhes do restaurante:', error);
         }
       }
       
       setTicket(ticketEncontrado);
       setErro('');
     } catch (error) {
-      console.error('❌ Erro ao buscar ticket:', error);
-      console.error('📄 Response error:', error.response?.data);
+      logger.error('❌ Erro ao buscar ticket:', error);
+      logger.error('📄 Response error:', error.response?.data);
       setErro('Você não possui tickets ativos no momento.');
       setTicket(null);
     } finally {
@@ -263,11 +263,11 @@ export default function AcompanharFila() {
 
     try {
       await clienteService.cancelarTicket(ticket.id);
-      console.log('✅ Ticket cancelado');
+      logger.log('✅ Ticket cancelado');
       setModalCancelarAberto(false);
       navigate('/cliente/restaurantes');
     } catch (error) {
-      console.error('Erro ao cancelar ticket:', error);
+      logger.error('Erro ao cancelar ticket:', error);
       setErro('Erro ao cancelar ticket. Tente novamente.');
       setLoadingCancelar(false);
     }

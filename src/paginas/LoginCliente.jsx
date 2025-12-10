@@ -20,10 +20,10 @@ export default function LoginCliente() {
       const { token, cliente } = response;
       localStorage.setItem('token', token);
       localStorage.setItem('clienteLogado', JSON.stringify(cliente));
-      console.log('✅ Cliente logado:', cliente);
+      logger.log('✅ Cliente logado:', cliente);
       navigate('/cliente/restaurantes');
     } catch (error) {
-      console.error('Erro ao fazer login:', error);
+      logger.error('Erro ao fazer login:', error);
       setErro(error.response?.data?.message || 'Erro ao fazer login. Tente novamente.');
     } finally {
       setLoading(false);

@@ -47,28 +47,28 @@ function PainelOperador() {
   // Escutar eventos WebSocket em tempo real
   useEffect(() => {
     if (!isConnected) {
-      console.log('⚠️ WebSocket não conectado, listeners não registrados');
+      logger.log('⚠️ WebSocket não conectado, listeners não registrados');
       return;
     }
 
-    console.log('🎧 Registrando listeners WebSocket...');
+    logger.log('🎧 Registrando listeners WebSocket...');
 
     // Ticket criado
     const handleTicketCriado = (data) => {
-      console.log('🎫 EVENTO RECEBIDO: ticket:criado', data);
+      logger.log('🎫 EVENTO RECEBIDO: ticket:criado', data);
       // Recarregar fila para pegar atualização
       carregarFila();
     };
 
     // Ticket atualizado (status/posição mudou)
     const handleTicketAtualizado = (data) => {
-      console.log('📝 EVENTO RECEBIDO: ticket:atualizado', data);
+      logger.log('📝 EVENTO RECEBIDO: ticket:atualizado', data);
       carregarFila();
     };
 
     // Ticket chamado
     const handleTicketChamado = (data) => {
-      console.log('📢 EVENTO RECEBIDO: ticket:chamado', data);
+      logger.log('📢 EVENTO RECEBIDO: ticket:chamado', data);
       // Tocar som de notificação
       playNotificationSound();
       carregarFila();
@@ -76,7 +76,7 @@ function PainelOperador() {
 
     // Mesa pronta (cliente confirmou presença)
     const handleMesaPronta = (data) => {
-      console.log('🍽️ EVENTO RECEBIDO: ticket:mesa-pronta', data);
+      logger.log('🍽️ EVENTO RECEBIDO: ticket:mesa-pronta', data);
       // Tocar som de notificação
       playNotificationSound();
       carregarFila();
@@ -84,19 +84,19 @@ function PainelOperador() {
 
     // Ticket finalizado
     const handleTicketFinalizado = (data) => {
-      console.log('✅ EVENTO RECEBIDO: ticket:finalizado', data);
+      logger.log('✅ EVENTO RECEBIDO: ticket:finalizado', data);
       carregarFila();
     };
 
     // Ticket cancelado
     const handleTicketCancelado = (data) => {
-      console.log('❌ EVENTO RECEBIDO: ticket:cancelado', data);
+      logger.log('❌ EVENTO RECEBIDO: ticket:cancelado', data);
       carregarFila();
     };
 
     // Fila atualizada (estatísticas)
     const handleFilaAtualizada = (data) => {
-      console.log('📊 EVENTO RECEBIDO: fila:atualizada', data);
+      logger.log('📊 EVENTO RECEBIDO: fila:atualizada', data);
       setEstatisticas(data);
     };
 
@@ -109,7 +109,7 @@ function PainelOperador() {
     on('ticket:cancelado', handleTicketCancelado);
     on('fila:atualizada', handleFilaAtualizada);
     
-    console.log('✅ Listeners WebSocket registrados com sucesso');
+    logger.log('✅ Listeners WebSocket registrados com sucesso');
 
     // Cleanup
     return () => {
@@ -128,9 +128,9 @@ function PainelOperador() {
     // Tocar som de notificação (se tiver arquivo de áudio)
     try {
       const audio = new Audio('/notification.mp3');
-      audio.play().catch(err => console.log('Não foi possível tocar som:', err));
+      audio.play().catch(err => logger.log('Não foi possível tocar som:', err));
     } catch (err) {
-      console.log('Erro ao tocar som:', err);
+      logger.log('Erro ao tocar som:', err);
     }
   };
 
@@ -142,18 +142,18 @@ function PainelOperador() {
       
       // Se não tiver filaId, buscar do backend
       if (!filaId) {
-        console.warn('⚠️ filaId não encontrado no localStorage. Buscando dados do restaurante...');
+        logger.warn('⚠️ filaId não encontrado no localStorage. Buscando dados do restaurante...');
         try {
           const restauranteSlug = localStorage.getItem('restauranteSlug');
           if (!restauranteSlug) {
-            console.error('❌ ERRO: restauranteSlug também não encontrado');
+            logger.error('❌ ERRO: restauranteSlug também não encontrado');
             setErro('Erro ao carregar dados do restaurante. Faça login novamente.');
             return;
           }
           
           // Buscar dados do restaurante para obter o filaId
           const responseRestaurante = await restauranteService.buscarMeuRestaurante();
-          console.log('📦 Dados do restaurante:', responseRestaurante);
+          logger.log('📦 Dados do restaurante:', responseRestaurante);
           
           // Backend retorna { restaurante: { filas: [...] } } ou diretamente { filas: [...] }
           const filas = responseRestaurante.restaurante?.filas || responseRestaurante.filas || [];
@@ -161,25 +161,25 @@ function PainelOperador() {
           if (filas.length > 0) {
             filaId = filas[0].id;
             localStorage.setItem('filaAtivaId', filaId);
-            console.log('✅ FilaId obtido:', filaId);
+            logger.log('✅ FilaId obtido:', filaId);
           } else {
-            console.error('❌ ERRO: Restaurante não possui filas');
-            console.error('❌ Resposta completa:', responseRestaurante);
+            logger.error('❌ ERRO: Restaurante não possui filas');
+            logger.error('❌ Resposta completa:', responseRestaurante);
             setErro('⚠️ ERRO DE CONFIGURAÇÃO: O backend não retornou as filas do restaurante. Verifique se o endpoint GET /restaurantes/meu-restaurante está incluindo o relacionamento "filas" ou "Fila".');
             return;
           }
         } catch (error) {
-          console.error('❌ Erro ao buscar dados do restaurante:', error);
+          logger.error('❌ Erro ao buscar dados do restaurante:', error);
           setErro('Erro ao carregar dados. Faça login novamente.');
           return;
         }
       }
       
-      console.log('🔍 Carregando fila:', filaId);
+      logger.log('🔍 Carregando fila:', filaId);
       const response = await ticketService.listarFilaAtiva(filaId);
-      console.log('📋 Tickets recebidos:', response.tickets);
-      console.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
-      console.log('👥 Campos de quantidade:', {
+      logger.log('📋 Tickets recebidos:', response.tickets);
+      logger.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
+      logger.log('👥 Campos de quantidade:', {
         quantidadePessoas: response.tickets?.[0]?.quantidadePessoas,
         qtdPessoas: response.tickets?.[0]?.qtdPessoas,
         numeroPessoas: response.tickets?.[0]?.numeroPessoas,
@@ -206,12 +206,12 @@ function PainelOperador() {
       
       setTickets(ticketsOrdenados);
       setEstatisticas(response.estatisticas);
-      console.log('✅ Fila carregada:', response);
-      console.log('📊 Total de tickets:', response.tickets?.length);
-      console.log('📋 Status dos tickets:', response.tickets?.map(t => ({ numeroTicket: t.numeroTicket, status: t.status })));
-      console.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
+      logger.log('✅ Fila carregada:', response);
+      logger.log('📊 Total de tickets:', response.tickets?.length);
+      logger.log('📋 Status dos tickets:', response.tickets?.map(t => ({ numeroTicket: t.numeroTicket, status: t.status })));
+      logger.log('🔍 Primeiro ticket completo:', response.tickets?.[0]);
     } catch (error) {
-      console.error('Erro ao carregar fila:', error);
+      logger.error('Erro ao carregar fila:', error);
       setErro('Erro ao carregar fila. Tente novamente.');
     } finally {
       setLoading(false);
@@ -227,35 +227,35 @@ function PainelOperador() {
   const chamarCliente = async (ticketId) => {
     try {
       await ticketService.chamarCliente(ticketId);
-      console.log('✅ Cliente chamado');
+      logger.log('✅ Cliente chamado');
       await carregarFila();
     } catch (error) {
-      console.error('Erro ao chamar cliente:', error);
+      logger.error('Erro ao chamar cliente:', error);
     }
   };
 
   const rechamarCliente = async (ticketId) => {
     try {
       await ticketService.rechamarCliente(ticketId);
-      console.log('✅ Cliente rechamado');
+      logger.log('✅ Cliente rechamado');
       await carregarFila();
     } catch (error) {
-      console.error('Erro ao rechamar cliente:', error);
+      logger.error('Erro ao rechamar cliente:', error);
     }
   };
 
   const confirmarPresenca = async (ticketId) => {
     try {
-      console.log('🔄 Confirmando presença do ticket:', ticketId);
+      logger.log('🔄 Confirmando presença do ticket:', ticketId);
       const response = await ticketService.confirmarPresenca(ticketId);
-      console.log('✅ Resposta do backend:', response);
-      console.log('📊 Status do ticket após confirmar:', response.ticket?.status);
-      console.log('📦 Ticket completo:', JSON.stringify(response.ticket, null, 2));
+      logger.log('✅ Resposta do backend:', response);
+      logger.log('📊 Status do ticket após confirmar:', response.ticket?.status);
+      logger.log('📦 Ticket completo:', JSON.stringify(response.ticket, null, 2));
       
       // Recarregar fila para mostrar atualização
       await carregarFila();
     } catch (error) {
-      console.error('❌ Erro ao confirmar presença:', error);
+      logger.error('❌ Erro ao confirmar presença:', error);
       const mensagem = error.response?.data?.mensagem || error.response?.data?.erro || 'Erro ao confirmar presença';
       alert(`Erro: ${mensagem}`);
     }
@@ -263,16 +263,16 @@ function PainelOperador() {
 
   const finalizarAtendimento = async (ticketId) => {
     try {
-      console.log('🔄 Finalizando atendimento do ticket:', ticketId);
+      logger.log('🔄 Finalizando atendimento do ticket:', ticketId);
       const response = await ticketService.finalizarAtendimento(ticketId);
-      console.log('✅ Atendimento finalizado:', response);
+      logger.log('✅ Atendimento finalizado:', response);
       await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
     } catch (error) {
-      console.error('❌ Erro ao finalizar atendimento:', error);
-      console.error('❌ Status:', error.response?.status);
-      console.error('❌ Dados:', error.response?.data);
+      logger.error('❌ Erro ao finalizar atendimento:', error);
+      logger.error('❌ Status:', error.response?.status);
+      logger.error('❌ Dados:', error.response?.data);
       const mensagem = error.response?.data?.mensagem || error.response?.data?.erro || 'Erro ao finalizar atendimento';
       alert(`Erro: ${mensagem}`);
     }
@@ -281,10 +281,10 @@ function PainelOperador() {
   const pularVez = async (ticketId) => {
     try {
       await ticketService.pularCliente(ticketId);
-      console.log('✅ Vez pulada');
+      logger.log('✅ Vez pulada');
       await carregarFila();
     } catch (error) {
-      console.error('Erro ao pular vez:', error);
+      logger.error('Erro ao pular vez:', error);
     }
   };
 
@@ -293,12 +293,12 @@ function PainelOperador() {
     
     try {
       await ticketService.marcarNoShow(ticketId);
-      console.log('✅ No-show registrado');
+      logger.log('✅ No-show registrado');
       await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
     } catch (error) {
-      console.error('Erro ao marcar no-show:', error);
+      logger.error('Erro ao marcar no-show:', error);
     }
   };
 
@@ -315,7 +315,7 @@ function PainelOperador() {
 
     try {
       await ticketService.cancelarTicket(ticketParaCancelar, motivoCancelamento);
-      console.log('✅ Ticket cancelado');
+      logger.log('✅ Ticket cancelado');
       await carregarFila();
       setModalAberto(false);
       setTicketSelecionado(null);
@@ -323,7 +323,7 @@ function PainelOperador() {
       setMotivoCancelamento('');
       setTicketParaCancelar(null);
     } catch (error) {
-      console.error('Erro ao cancelar ticket:', error);
+      logger.error('Erro ao cancelar ticket:', error);
     }
   };
 
@@ -336,7 +336,7 @@ function PainelOperador() {
     try {
       const filaId = localStorage.getItem('filaAtivaId');
       if (!filaId) {
-        console.error('❌ ERRO: filaId não encontrado');
+        logger.error('❌ ERRO: filaId não encontrado');
         return;
       }
       
@@ -347,7 +347,7 @@ function PainelOperador() {
         observacoes: novoCliente.observacoes
       });
       
-      console.log('✅ Cliente presencial adicionado');
+      logger.log('✅ Cliente presencial adicionado');
       await carregarFila();
       
       // Limpar form e fechar modal
@@ -359,7 +359,7 @@ function PainelOperador() {
       });
       setModalAdicionarAberto(false);
     } catch (error) {
-      console.error('Erro ao adicionar cliente:', error);
+      logger.error('Erro ao adicionar cliente:', error);
     }
   };
 
@@ -439,7 +439,7 @@ function PainelOperador() {
     localStorage.removeItem('filaAtivaId');
     localStorage.removeItem('userRole');
     
-    console.log('✅ Logout realizado - localStorage limpo');
+    logger.log('✅ Logout realizado - localStorage limpo');
     
     // Redirecionar para login
     navigate('/restaurante/login');
