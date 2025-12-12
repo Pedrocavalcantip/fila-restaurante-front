@@ -576,11 +576,6 @@ function PainelOperador() {
                               ⚡ Fast Lane
                             </span>
                           )}
-                          {ticket.prioridade === 'VIP' && (
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                              👑 VIP
-                            </span>
-                          )}
                           {/* Badge de Status */}
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
                             ticket.status === 'CHAMADO' 
@@ -770,11 +765,9 @@ function PainelOperador() {
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                       ticketSelecionado.prioridade === 'FAST_LANE' 
                         ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
-                        : ticketSelecionado.prioridade === 'VIP'
-                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                         : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
-                      {ticketSelecionado.prioridade === 'FAST_LANE' ? 'Fast Lane' : ticketSelecionado.prioridade === 'VIP' ? 'VIP' : 'Normal'}
+                      {ticketSelecionado.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
                     </span>
                   </div>
                   <div>

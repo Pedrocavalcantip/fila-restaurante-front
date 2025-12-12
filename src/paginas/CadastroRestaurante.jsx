@@ -131,7 +131,6 @@ export default function CadastroRestaurante() {
         emailAdmin: formData.emailAdmin.trim(),
         senhaAdmin: formData.senhaAdmin,
         precoFastlane: Number(formData.precoFastlane),
-        precoVip: Number(formData.precoFastlane),
         maxReentradasPorDia: Number(formData.maxReentradasPorDia),
         telefone: formData.telefone.replace(/\D/g, ''),
         cidade: formData.cidade.trim(),
@@ -145,7 +144,6 @@ export default function CadastroRestaurante() {
       console.log('  - Email Admin:', payload.emailAdmin);
       console.log('  - Senha Admin: ***');
       console.log('  - Preço Fastlane:', payload.precoFastlane);
-      console.log('  - Preço VIP:', payload.precoVip);
       console.log('  - Max Reentradas:', payload.maxReentradasPorDia);
       console.log('  - Telefone:', payload.telefone);
       console.log('  - Cidade/Estado:', payload.cidade, '/', payload.estado);
@@ -160,7 +158,6 @@ export default function CadastroRestaurante() {
       if (response.restaurante) {
         console.log('  - maxReentradasPorDia salvo:', response.restaurante.maxReentradasPorDia);
         console.log('  - precoFastlane salvo:', response.restaurante.precoFastlane);
-        console.log('  - precoVip salvo:', response.restaurante.precoVip);
         console.log('  - cidade salva:', response.restaurante.cidade);
         console.log('  - estado salvo:', response.restaurante.estado);
       }

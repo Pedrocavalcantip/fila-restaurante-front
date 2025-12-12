@@ -130,11 +130,10 @@ export default function Dashboard() {
   // Calcular porcentagens para o gráfico de pizza
   const pizzaData = useMemo(() => {
     if (!dados) return [];
-    const total = (dados.ticketsFastLane || 0) + (dados.ticketsVip || 0) + (dados.ticketsNormais || 0);
+    const total = (dados.ticketsFastLane || 0) + (dados.ticketsNormais || 0);
     if (total === 0) return [];
     return [
       { label: 'Fast Lane', valor: dados.ticketsFastLane || 0, percent: ((dados.ticketsFastLane || 0) / total * 100).toFixed(1), cor: '#f97316' },
-      { label: 'VIP', valor: dados.ticketsVip || 0, percent: ((dados.ticketsVip || 0) / total * 100).toFixed(1), cor: '#8b5cf6' },
       { label: 'Normal', valor: dados.ticketsNormais || 0, percent: ((dados.ticketsNormais || 0) / total * 100).toFixed(1), cor: '#6b7280' },
     ];
   }, [dados]);
@@ -300,13 +299,6 @@ export default function Dashboard() {
                     <span className="text-xs text-orange-100">Fast Lane</span>
                   </div>
                   <p className="text-lg font-bold text-white">{formatarMoeda(dados?.receitaFastLane)}</p>
-                </div>
-                <div className="flex-1 bg-white/10 rounded-xl p-3 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Crown className="w-4 h-4 text-white" />
-                    <span className="text-xs text-orange-100">VIP</span>
-                  </div>
-                  <p className="text-lg font-bold text-white">{formatarMoeda(dados?.receitaVip)}</p>
                 </div>
               </div>
             </div>
@@ -584,28 +576,6 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* VIP */}
-                <div className="group">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
-                        <Crown className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm text-slate-300 font-medium">VIP</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white font-bold">{dados?.ticketsVip || 0}</p>
-                      <p className="text-xs text-purple-400">{formatarMoeda(dados?.receitaVip)}</p>
-                    </div>
-                  </div>
-                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-1000"
-                      style={{ width: `${pizzaData.find(d => d.label === 'VIP')?.percent || 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-
                 {/* Normal */}
                 <div className="group">
                   <div className="flex items-center justify-between mb-2">
@@ -650,10 +620,6 @@ export default function Dashboard() {
                     <Users className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-300">{estatisticas.clientes.total}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20">
-                    <Crown className="w-4 h-4 text-purple-400" />
-                    <span className="text-purple-300">{estatisticas.clientes.vips} VIPs</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -666,9 +632,7 @@ export default function Dashboard() {
                     <th className="text-left py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cliente</th>
                     <th className="text-center py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Visitas</th>
                     <th className="text-center py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Fast Lane</th>
-                    <th className="text-center py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">VIP</th>
                     <th className="text-center py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">No-Shows</th>
-                    <th className="text-center py-4 px-6 text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -713,12 +677,6 @@ export default function Dashboard() {
                         </span>
                       </td>
                       <td className="text-center py-4 px-6">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-500/10 text-purple-400 rounded-lg text-sm font-medium">
-                          <Crown className="w-3 h-3" />
-                          {cliente.totalVip || 0}
-                        </span>
-                      </td>
-                      <td className="text-center py-4 px-6">
                         <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${
                           cliente.totalNoShows > 0 
                             ? 'bg-red-500/10 text-red-400' 
@@ -726,16 +684,6 @@ export default function Dashboard() {
                         }`}>
                           {cliente.totalNoShows}
                         </span>
-                      </td>
-                      <td className="text-center py-4 px-6">
-                        {cliente.isVip ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 text-xs font-bold rounded-full border border-purple-500/30">
-                            <Crown className="w-3 h-3" />
-                            VIP
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 text-xs">Regular</span>
-                        )}
                       </td>
                     </tr>
                   ))}

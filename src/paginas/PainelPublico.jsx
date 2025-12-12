@@ -123,8 +123,6 @@ export default function PainelPublico() {
 
   const getPrioridadeStyle = (prioridade) => {
     switch (prioridade) {
-      case 'VIP':
-        return 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900';
       case 'FAST_LANE':
         return 'bg-gradient-to-r from-orange-500 to-orange-700 text-white';
       default:
@@ -225,8 +223,7 @@ export default function PainelPublico() {
                             <span className="text-5xl">{getPrioridadeIcon(ticket.prioridade)}</span>
                           )}
                           <span className="text-2xl font-bold opacity-90">
-                            {ticket.prioridade === 'VIP' ? 'VIP' :
-                             ticket.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
+                            {ticket.prioridade === 'FAST_LANE' ? 'Fast Lane' : 'Normal'}
                           </span>
                         </div>
                         <div className="text-sm opacity-75 mb-1">TICKET</div>

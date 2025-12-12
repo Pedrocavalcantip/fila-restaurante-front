@@ -39,8 +39,7 @@ export default function DetalhesTicket() {
           telefone: '(11) 98765-4321',
           email: 'maria.santos@email.com',
           cidade: 'São Paulo',
-          estado: 'SP',
-          isVip: false
+          estado: 'SP'
         },
         fila: {
           nome: 'Jantar',
